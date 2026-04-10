@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedRevise</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,300&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f2ec;
+  --bg2: #ede9e0;
+  --bg3: #e4dfd4;
+  --ink: #1a1714;
+  --ink2: #4a453e;
+  --ink3: #8a8278;
+  --line: rgba(26,23,20,0.1);
+  --line2: rgba(26,23,20,0.18);
+  --red: #c84b2f;
+  --green: #2a7a4b;
+  --amber: #b87010;
+  --blue: #2856a0;
+  --red-bg: #fdf0ec;
+  --green-bg: #eaf5ef;
+  --amber-bg: #fdf5e8;
+  --blue-bg: #eef3fc;
+  --accent: #c84b2f;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Outfit',sans-serif;
+  font-weight:400;
+  min-height:100vh;
+  font-size:15px;
+  line-height:1.6;
+}
+
+/* ── NOISE TEXTURE ── */
+body::after{
+  content:'';
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:0.4;
+}
+
+/* ── LAYOUT ── */
+.app{display:flex;min-height:100vh;flex-direction:column}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 2rem;
+  border-bottom:1px solid var(--line);
+  background:var(--bg);
+  position:sticky;top:0;z-index:100;
+}
+.logo-wrap{display:flex;align-items:baseline;gap:0.5rem}
+.logo{
+  font-family:'Fraunces',serif;
+  font-size:1.5rem;
+  font-weight:700;
+  letter-spacing:-0.02em;
+  color:var(--ink);
+}
+.logo sup{
+  font-family:'Outfit',sans-serif;
+  font-size:0.6rem;
+  font-weight:600;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--accent);
+  vertical-align:super;
+  margin-left:2px;
+}
+.topbar-stats{display:flex;gap:0.5rem;align-items:center}
+.tscore{
+  font-family:'DM Mono',monospace;
+  font-size:0.72rem;
+  background:var(--bg2);
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:0.3rem 0.75rem;
+  color:var(--ink2);
+  display:flex;gap:0.35rem;align-items:center;
+}
+.tscore b{color:var(--ink);font-weight:500}
+.tscore.fire b{color:var(--red)}
+
+.main{flex:1;padding:2rem;max-width:900px;margin:0 auto;width:100%}
+
+/* ── SCREENS ── */
+.screen{display:none}
+.screen.on{display:block;animation:fade 0.3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── HOME ── */
+.home-hero{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:2rem;
+  align-items:end;
+  margin-bottom:3rem;
+  padding-bottom:2rem;
+  border-bottom:1px solid var(--line);
+}
+.home-title{
+  font-family:'Fraunces',serif;
+  font-size:clamp(2.2rem,5vw,3.8rem);
+  font-weight:700;
+  line-height:1.05;
+  letter-spacing:-0.03em;
+}
+.home-title em{font-style:italic;color:var(--accent)}
+.home-sub{
+  font-size:0.95rem;
+  color:var(--ink2);
+  line-height:1.7;
+  margin-top:0.75rem;
+  max-width:440px;
+}
+.subject-count{
+  text-align:right;
+}
+.big-num{
+  font-family:'Fraunces',serif;
+  font-size:4rem;
+  font-weight:600;
+  line-height:1;
+  color:var(--accent);
+}
+.big-label{
+  font-size:0.75rem;
+  text-transform:uppercase;
+  letter-spacing:0.1em;
+  color:var(--ink3);
+  margin-top:0.2rem;
+}
+
+.section-head{
+  font-family:'DM Mono',monospace;
+  font-size:0.65rem;
+  text-transform:uppercase;
+  letter-spacing:0.12em;
+  color:var(--ink3);
+  margin-bottom:1rem;
+}
+
+/* ── MODE CARDS ── */
+.mode-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:0.75rem;
+  margin-bottom:2.5rem;
+}
+.mode-card{
+  background:var(--bg);
+  border:1px solid var(--line2);
+  border-radius:12px;
+  padding:1.4rem;
+  cursor:pointer;
+  transition:all 0.2s;
+  position:relative;
+  overflow:hidden;
+}
+.mode-card:hover{background:var(--bg2);transform:translateY(-2px);box-shadow:0 4px 16px rgba(26,23,20,0.08)}
+.mode-card.active{
+  background:var(--ink);
+  border-color:var(--ink);
+  color:#f5f2ec;
+}
+.mode-card.active .mc-desc{color:rgba(245,242,236,0.6)}
+.mode-card.active .mc-icon{filter:invert(1)}
+.mc-icon{font-size:1.4rem;margin-bottom:0.6rem;display:block}
+.mc-name{
+  font-family:'Fraunces',serif;
+  font-size:1.05rem;
+  font-weight:600;
+  margin-bottom:0.25rem;
+}
+.mc-desc{font-size:0.78rem;color:var(--ink2);line-height:1.5}
+
+/* ── TOPIC + COUNT CHIPS ── */
+.chips-row{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:2rem}
+.chip{
+  padding:0.35rem 0.85rem;
+  background:var(--bg2);
+  border:1px solid var(--line);
+  border-radius:999px;
+  font-size:0.78rem;
+  cursor:pointer;
+  transition:all 0.15s;
+  color:var(--ink2);
+  user-select:none;
+}
+.chip:hover{border-color:var(--line2);color:var(--ink)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.chip.anat{--c:#2856a0}
+.chip.genmed{--c:#2a7a4b}
+.chip.on.anat{background:var(--blue);border-color:var(--blue)}
+.chip.on.genmed{background:var(--green);border-color:var(--green)}
+
+/* ── START BTN ── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;
+  font-family:'Outfit',sans-serif;font-size:0.9rem;font-weight:600;
+  padding:0.8rem 2rem;border-radius:8px;border:none;cursor:pointer;
+  transition:all 0.15s;
+}
+.btn-ink{background:var(--ink);color:var(--bg)}
+.btn-ink:hover{background:#2a2520;transform:translateY(-1px)}
+.btn-ink:disabled{opacity:0.35;cursor:default;transform:none}
+.btn-ghost{background:var(--bg2);color:var(--ink);border:1px solid var(--line2)}
+.btn-ghost:hover{background:var(--bg3)}
+.btn-red{background:var(--accent);color:#fff}
+.btn-red:hover{background:#b03f24}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{filter:brightness(0.9)}
+
+/* ── PROGRESS BAR ── */
+.pbar-wrap{height:3px;background:var(--bg3);border-radius:999px;margin-bottom:1.5rem;overflow:hidden}
+.pbar-fill{height:100%;background:var(--ink);border-radius:999px;transition:width 0.4s ease}
+
+/* ── QUIZ META ── */
+.quiz-meta{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:1.25rem;
+}
+.qm-topic{
+  font-family:'DM Mono',monospace;
+  font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;
+  padding:0.3rem 0.7rem;border-radius:999px;
+  border:1px solid var(--line2);
+  color:var(--ink2);
+  background:var(--bg2);
+}
+.qm-topic.anat{background:var(--blue-bg);border-color:rgba(40,86,160,0.2);color:var(--blue)}
+.qm-topic.genmed{background:var(--green-bg);border-color:rgba(42,122,75,0.2);color:var(--green)}
+.qm-right{display:flex;align-items:center;gap:1rem}
+.lives{font-size:0.95rem;letter-spacing:0.04em}
+.qm-count{font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--ink3)}
+
+/* ── TIMER BAR ── */
+.timer-wrap{height:3px;background:var(--bg3);border-radius:999px;margin-bottom:1rem;overflow:hidden}
+.timer-fill{height:100%;background:var(--amber);border-radius:999px;transition:width 1s linear,background 0.3s}
+.timer-fill.red{background:var(--red)}
+
+/* ── Q CARD ── */
+.q-card{
+  background:var(--bg);
+  border:1px solid var(--line2);
+  border-radius:14px;
+  padding:2rem;
+  margin-bottom:1rem;
+}
+.q-badge{
+  font-family:'DM Mono',monospace;
+  font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;
+  color:var(--ink3);margin-bottom:0.9rem;
+}
+.q-text{
+  font-family:'Fraunces',serif;
+  font-size:1.25rem;
+  font-weight:300;
+  line-height:1.5;
+}
+.q-text strong,.q-text b{
+  font-weight:600;
+  font-style:italic;
+}
+
+/* ── ANSWER GRID ── */
+.ans-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.55rem;margin-bottom:1rem}
+@media(max-width:520px){.ans-grid{grid-template-columns:1fr}}
+.ans-btn{
+  background:var(--bg);
+  border:1px solid var(--line2);
+  border-radius:10px;
+  padding:0.9rem 1rem;
+  text-align:left;
+  font-family:'Outfit',sans-serif;
+  font-size:0.85rem;
+  color:var(--ink);
+  cursor:pointer;
+  transition:all 0.15s;
+  line-height:1.45;
+  display:flex;align-items:flex-start;gap:0.6rem;
+}
+.ans-btn:hover:not(:disabled){background:var(--bg2);border-color:var(--line2);transform:translateY(-1px)}
+.ans-btn:disabled{cursor:default}
+.ans-btn.correct{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+.ans-btn.wrong{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.ans-btn.missed{background:var(--green-bg);border-color:var(--green);color:var(--green);opacity:0.7}
+.ans-key{
+  font-family:'DM Mono',monospace;font-size:0.68rem;
+  background:var(--bg2);border-radius:4px;
+  padding:0.15rem 0.4rem;flex-shrink:0;margin-top:1px;
+  color:var(--ink3);
+}
+.ans-btn.correct .ans-key,.ans-btn.missed .ans-key{background:rgba(42,122,75,0.15);color:var(--green)}
+.ans-btn.wrong .ans-key{background:rgba(200,75,47,0.15);color:var(--red)}
+
+/* ── FEEDBACK ── */
+.feedback{
+  border-radius:10px;padding:1rem 1.25rem;
+  margin-bottom:1rem;display:none;animation:fade 0.2s ease;
+}
+.feedback.show{display:block}
+.feedback.ok{background:var(--green-bg);border:1px solid rgba(42,122,75,0.25)}
+.feedback.bad{background:var(--red-bg);border:1px solid rgba(200,75,47,0.25)}
+.feedback.warn{background:var(--amber-bg);border:1px solid rgba(184,112,16,0.25)}
+.fb-head{font-weight:600;font-size:0.9rem;margin-bottom:0.3rem}
+.feedback.ok .fb-head{color:var(--green)}
+.feedback.bad .fb-head{color:var(--red)}
+.feedback.warn .fb-head{color:var(--amber)}
+.fb-body{font-size:0.82rem;color:var(--ink2);line-height:1.6}
+
+.quiz-actions{display:flex;justify-content:space-between;align-items:center;gap:0.5rem}
+.qa-left{display:flex;gap:0.5rem}
+
+/* ── STREAK FLASH ── */
+.streak-pop{
+  position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  font-family:'Fraunces',serif;
+  font-size:2.5rem;font-weight:700;
+  color:var(--amber);
+  pointer-events:none;z-index:200;opacity:0;
+}
+.streak-pop.go{animation:streakgo 1.2s ease forwards}
+@keyframes streakgo{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(0.5)}
+  20%{opacity:1;transform:translate(-50%,-58%) scale(1.1)}
+  60%{opacity:1;transform:translate(-50%,-62%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-75%) scale(0.9)}
+}
+
+/* ── FLASHCARD MODE ── */
+.fc-wrap{perspective:1200px;margin-bottom:1.5rem}
+.fc-inner{
+  position:relative;height:260px;
+  transform-style:preserve-3d;
+  transition:transform 0.5s ease;
+  cursor:pointer;
+}
+.fc-inner.flipped{transform:rotateY(180deg)}
+.fc-face{
+  position:absolute;inset:0;
+  backface-visibility:hidden;
+  border-radius:14px;
+  border:1px solid var(--line2);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:2rem;
+  text-align:center;
+}
+.fc-front{background:var(--bg)}
+.fc-back{background:var(--ink);transform:rotateY(180deg)}
+.fc-hint{
+  font-family:'DM Mono',monospace;
+  font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;
+  color:var(--ink3);margin-bottom:1rem;
+}
+.fc-front .fc-hint{color:var(--ink3)}
+.fc-back .fc-hint{color:rgba(245,242,236,0.5)}
+.fc-q{
+  font-family:'Fraunces',serif;
+  font-size:1.2rem;font-weight:300;line-height:1.5;
+}
+.fc-back .fc-q{color:var(--bg);font-weight:400}
+.fc-actions{display:flex;gap:0.75rem;justify-content:center}
+.fc-nav{display:flex;gap:0.5rem;align-items:center;justify-content:center;margin-bottom:1rem}
+.fc-count{font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--ink3)}
+
+/* ── FILL IN THE BLANK ── */
+.blank-q{
+  font-family:'Fraunces',serif;
+  font-size:1.3rem;font-weight:300;line-height:1.6;
+  margin-bottom:1.5rem;
+  background:var(--bg);border:1px solid var(--line2);
+  border-radius:14px;padding:2rem;
+}
+.blank-input{
+  display:inline-block;
+  border:none;border-bottom:2px solid var(--ink);
+  background:transparent;
+  font-family:'Fraunces',serif;
+  font-size:1.1rem;
+  font-weight:600;
+  color:var(--ink);
+  min-width:160px;
+  padding:0.1rem 0.3rem;
+  outline:none;
+  margin:0 0.2rem;
+}
+.blank-input.ok{border-color:var(--green);color:var(--green)}
+.blank-input.bad{border-color:var(--red);color:var(--red)}
+.blank-options{
+  display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.5rem;
+}
+.blank-opt{
+  padding:0.45rem 1rem;
+  background:var(--bg2);
+  border:1px solid var(--line2);
+  border-radius:999px;
+  font-size:0.83rem;
+  cursor:pointer;
+  transition:all 0.15s;
+  user-select:none;
+}
+.blank-opt:hover{background:var(--bg3);border-color:var(--ink)}
+.blank-opt.used{opacity:0.35;cursor:default;pointer-events:none}
+
+/* ── MATCH MODE ── */
+.match-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0.5rem;
+  margin-bottom:1.5rem;
+}
+.match-col{display:flex;flex-direction:column;gap:0.5rem}
+.match-item{
+  background:var(--bg2);
+  border:1.5px solid var(--line);
+  border-radius:8px;
+  padding:0.7rem 1rem;
+  font-size:0.83rem;
+  cursor:pointer;
+  transition:all 0.15s;
+  line-height:1.4;
+  min-height:52px;
+  display:flex;align-items:center;
+}
+.match-item:hover{border-color:var(--ink)}
+.match-item.selected{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.match-item.matched{background:var(--green-bg);border-color:var(--green);color:var(--green);cursor:default}
+.match-item.wrong-flash{animation:wrongflash 0.4s ease}
+@keyframes wrongflash{0%,100%{background:var(--bg2)}50%{background:var(--red-bg);border-color:var(--red)}}
+.match-score{font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--ink3);text-align:center;margin-bottom:0.5rem}
+
+/* ── RESULTS ── */
+.res-hero{text-align:center;padding:3rem 0 2rem}
+.res-pct{
+  font-family:'Fraunces',serif;
+  font-size:clamp(4rem,12vw,7rem);
+  font-weight:700;
+  line-height:1;
+  letter-spacing:-0.04em;
+  margin-bottom:0.5rem;
+}
+.res-label{font-size:0.95rem;color:var(--ink2);margin-bottom:2rem}
+.stats-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:2rem;
+}
+@media(max-width:480px){.stats-grid{grid-template-columns:1fr 1fr}}
+.stat-box{
+  background:var(--bg);border:1px solid var(--line2);
+  border-radius:10px;padding:1rem;text-align:center;
+}
+.stat-v{
+  font-family:'Fraunces',serif;
+  font-size:1.8rem;font-weight:700;margin-bottom:0.15rem;
+}
+.stat-l{font-size:0.72rem;color:var(--ink3);text-transform:uppercase;letter-spacing:0.07em}
+.review-section{margin-top:2rem}
+.review-item{
+  background:var(--bg);border:1px solid var(--line);
+  border-radius:10px;padding:1rem 1.25rem;margin-bottom:0.5rem;
+}
+.ri-q{font-size:0.85rem;font-weight:500;margin-bottom:0.4rem}
+.ri-yours{font-size:0.78rem;color:var(--red);margin-bottom:0.15rem}
+.ri-correct{font-size:0.78rem;color:var(--green)}
+.res-actions{display:flex;justify-content:center;gap:0.75rem;flex-wrap:wrap;margin-top:2rem}
+
+/* ── STUDY PANEL (Flashcard notes) ── */
+.study-note{
+  background:var(--bg);border:1px solid var(--line2);
+  border-radius:12px;padding:1.5rem;margin-bottom:0.75rem;
+}
+.sn-topic{
+  font-family:'DM Mono',monospace;
+  font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;
+  color:var(--ink3);margin-bottom:0.5rem;
+}
+.sn-q{font-weight:600;font-size:0.92rem;margin-bottom:0.35rem}
+.sn-a{font-size:0.85rem;color:var(--ink2);line-height:1.6}
+.sn-fact{
+  font-size:0.78rem;color:var(--blue);
+  background:var(--blue-bg);border:1px solid rgba(40,86,160,0.15);
+  border-radius:6px;padding:0.5rem 0.75rem;margin-top:0.6rem;
+}
+.study-filter{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.25rem}
+.filter-search{
+  width:100%;padding:0.65rem 1rem;
+  border:1px solid var(--line2);border-radius:8px;
+  background:var(--bg);color:var(--ink);
+  font-family:'Outfit',sans-serif;font-size:0.85rem;
+  outline:none;margin-bottom:0.75rem;
+}
+.filter-search:focus{border-color:var(--ink)}
+.divider{border:none;border-top:1px solid var(--line);margin:1.5rem 0}
+.tab-row{display:flex;border-bottom:1px solid var(--line);margin-bottom:2rem}
+.tab-btn{
+  padding:0.7rem 1.25rem;
+  font-size:0.85rem;font-weight:500;
+  border:none;background:none;cursor:pointer;
+  color:var(--ink3);border-bottom:2px solid transparent;
+  transition:all 0.15s;font-family:'Outfit',sans-serif;
+}
+.tab-btn:hover{color:var(--ink)}
+.tab-btn.on{color:var(--ink);border-bottom-color:var(--ink)}
+.tab-panel{display:none}
+.tab-panel.on{display:block}
+
+/* ── GENERAL ── */
+.hidden{display:none!important}
+strong{font-weight:600}
+</style>
+</head>
+<body>
+<div id="streak-pop" class="streak-pop"></div>
+
+<div class="app">
+  <div class="topbar">
+    <div class="logo-wrap">
+      <div class="logo">MedRevise <sup>pro</sup></div>
+    </div>
+    <div class="topbar-stats">
+      <div class="tscore fire">🔥 <b id="hdr-streak">0</b></div>
+      <div class="tscore">⭐ <b id="hdr-pts">0</b> pts</div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- ══════════════ HOME ══════════════ -->
+    <div id="screen-home" class="screen on">
+      <div class="home-hero">
+        <div>
+          <h1 class="home-title">Every fact.<br>Every muscle.<br><em>Tested.</em></h1>
+          <p class="home-sub">Anatomy & General Medicine combined — quiz yourself with 4 different game modes designed to make revision stick.</p>
+        </div>
+        <div class="subject-count">
+          <div class="big-num" id="q-total">—</div>
+          <div class="big-label">questions</div>
+        </div>
+      </div>
+
+      <div class="section-head">Choose a mode</div>
+      <div class="mode-grid">
+        <div class="mode-card active" data-mode="quiz">
+          <span class="mc-icon">🧠</span>
+          <div class="mc-name">Multiple Choice</div>
+          <div class="mc-desc">4 options per question. Streak bonuses for consecutive correct answers.</div>
+        </div>
+        <div class="mode-card" data-mode="flashcard">
+          <span class="mc-icon">🃏</span>
+          <div class="mc-name">Flashcards</div>
+          <div class="mc-desc">Flip cards to reveal the answer. Mark as known or still learning.</div>
+        </div>
+        <div class="mode-card" data-mode="blank">
+          <span class="mc-icon">✏️</span>
+          <div class="mc-name">Fill the Gap</div>
+          <div class="mc-desc">Drag or tap the correct word to fill the blank in each statement.</div>
+        </div>
+        <div class="mode-card" data-mode="match">
+          <span class="mc-icon">🔗</span>
+          <div class="mc-name">Match Up</div>
+          <div class="mc-desc">Match muscles/conditions to their origin, insertion or nerve supply.</div>
+        </div>
+        <div class="mode-card" data-mode="timed">
+          <span class="mc-icon">⚡</span>
+          <div class="mc-name">Speed Round</div>
+          <div class="mc-desc">10 seconds per question. Fast answers earn bonus points.</div>
+        </div>
+        <div class="mode-card" data-mode="survival">
+          <span class="mc-icon">❤️</span>
+          <div class="mc-name">Survival</div>
+          <div class="mc-desc">3 lives. One wrong answer costs you a life. How far can you go?</div>
+        </div>
+        <div class="mode-card" data-mode="study">
+          <span class="mc-icon">📖</span>
+          <div class="mc-name">Study Notes</div>
+          <div class="mc-desc">Browse all Q&A pairs as revision notes. Search and filter by topic.</div>
+        </div>
+      </div>
+
+      <div class="section-head">Filter by subject</div>
+      <div class="chips-row" id="subject-chips">
+        <div class="chip on" data-subj="all">All subjects</div>
+        <div class="chip on anat" data-subj="anatomy">🦴 Anatomy</div>
+        <div class="chip on genmed" data-subj="genmed">🏥 General Medicine</div>
+      </div>
+
+      <div class="section-head">Filter by topic</div>
+      <div class="chips-row" id="topic-chips"></div>
+
+      <div class="section-head">Questions</div>
+      <div class="chips-row" id="count-chips">
+        <div class="chip on" data-val="10">10</div>
+        <div class="chip" data-val="20">20</div>
+        <div class="chip" data-val="40">40</div>
+        <div class="chip" data-val="9999">All</div>
+      </div>
+
+      <button class="btn btn-ink" id="btn-start" onclick="startGame()">Begin Session →</button>
+    </div>
+
+    <!-- ══════════════ QUIZ / TIMED / SURVIVAL ══════════════ -->
+    <div id="screen-quiz" class="screen">
+      <div class="pbar-wrap"><div class="pbar-fill" id="pbar" style="width:0%"></div></div>
+      <div class="quiz-meta">
+        <span class="qm-topic" id="qm-topic">—</span>
+        <div class="qm-right">
+          <span class="lives" id="qm-lives"></span>
+          <span class="qm-count" id="qm-count">1 / 10</span>
+        </div>
+      </div>
+      <div class="timer-wrap hidden" id="timer-wrap">
+        <div class="timer-fill" id="timer-fill" style="width:100%"></div>
+      </div>
+      <div class="q-card">
+        <div class="q-badge" id="q-badge">Type</div>
+        <div class="q-text" id="q-text">Loading…</div>
+      </div>
+      <div class="ans-grid" id="ans-grid"></div>
+      <div class="feedback" id="feedback">
+        <div class="fb-head" id="fb-head"></div>
+        <div class="fb-body" id="fb-body"></div>
+      </div>
+      <div class="quiz-actions">
+        <div class="qa-left">
+          <button class="btn btn-ghost" onclick="quitToHome()">← Quit</button>
+        </div>
+        <button class="btn btn-ink" id="btn-next" style="display:none" onclick="nextQ()">Next →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════ FLASHCARD ══════════════ -->
+    <div id="screen-flashcard" class="screen">
+      <div class="pbar-wrap"><div class="pbar-fill" id="fc-pbar" style="width:0%"></div></div>
+      <div class="quiz-meta">
+        <span class="qm-topic" id="fc-topic">—</span>
+        <span class="qm-count" id="fc-count">1 / 10</span>
+      </div>
+
+      <div class="fc-wrap" onclick="flipCard()">
+        <div class="fc-inner" id="fc-inner">
+          <div class="fc-face fc-front">
+            <div class="fc-hint">Tap to reveal answer</div>
+            <div class="fc-q" id="fc-front-q">—</div>
+          </div>
+          <div class="fc-face fc-back">
+            <div class="fc-hint">Answer</div>
+            <div class="fc-q" id="fc-back-a">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feedback" id="fc-fact" style="display:block">
+        <div class="fb-body" id="fc-fact-body"></div>
+      </div>
+
+      <div class="fc-actions" id="fc-actions" style="display:none">
+        <button class="btn btn-red" onclick="fcMark(false)">Still learning ✗</button>
+        <button class="btn btn-green" onclick="fcMark(true)">Got it ✓</button>
+      </div>
+      <div class="fc-actions" id="fc-flip-hint" style="justify-content:center;display:flex;margin-top:0.5rem">
+        <span style="font-size:0.78rem;color:var(--ink3)">Tap card to flip</span>
+      </div>
+
+      <div class="divider"></div>
+      <div class="quiz-actions">
+        <button class="btn btn-ghost" onclick="quitToHome()">← Quit</button>
+        <div style="display:flex;gap:0.5rem">
+          <button class="btn btn-ghost" id="fc-prev" onclick="fcNav(-1)">‹ Prev</button>
+          <button class="btn btn-ghost" id="fc-next" onclick="fcNav(1)">Next ›</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ FILL THE BLANK ══════════════ -->
+    <div id="screen-blank" class="screen">
+      <div class="pbar-wrap"><div class="pbar-fill" id="bl-pbar" style="width:0%"></div></div>
+      <div class="quiz-meta">
+        <span class="qm-topic" id="bl-topic">—</span>
+        <span class="qm-count" id="bl-count">1 / 10</span>
+      </div>
+      <div class="blank-q" id="blank-q">Loading…</div>
+      <div class="section-head">Choose the correct word</div>
+      <div class="blank-options" id="blank-opts"></div>
+      <div class="feedback" id="bl-feedback">
+        <div class="fb-head" id="bl-head"></div>
+        <div class="fb-body" id="bl-body"></div>
+      </div>
+      <div class="quiz-actions">
+        <button class="btn btn-ghost" onclick="quitToHome()">← Quit</button>
+        <button class="btn btn-ink" id="bl-next" style="display:none" onclick="nextBlank()">Next →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════ MATCH ══════════════ -->
+    <div id="screen-match" class="screen">
+      <div class="quiz-meta">
+        <span class="qm-topic" id="mt-topic">Match Up</span>
+        <span class="qm-count" id="mt-score-label">0 / 6 matched</span>
+      </div>
+      <div class="match-score" id="mt-score"></div>
+      <div class="match-grid">
+        <div class="match-col" id="mt-left"></div>
+        <div class="match-col" id="mt-right"></div>
+      </div>
+      <div class="feedback" id="mt-feedback">
+        <div class="fb-head" id="mt-head"></div>
+        <div class="fb-body" id="mt-body"></div>
+      </div>
+      <div class="quiz-actions">
+        <button class="btn btn-ghost" onclick="quitToHome()">← Quit</button>
+        <button class="btn btn-ink" id="mt-next" style="display:none" onclick="nextMatch()">Next Round →</button>
+      </div>
+    </div>
+
+    <!-- ══════════════ STUDY NOTES ══════════════ -->
+    <div id="screen-study" class="screen">
+      <div class="quiz-meta" style="margin-bottom:1.5rem">
+        <span style="font-family:'Fraunces',serif;font-size:1.2rem;font-weight:600">Study Notes</span>
+        <button class="btn btn-ghost" onclick="quitToHome()" style="padding:0.5rem 1rem;font-size:0.8rem">← Back</button>
+      </div>
+      <input class="filter-search" type="text" placeholder="Search questions, answers, topics…" id="study-search" oninput="filterStudy()">
+      <div class="study-filter" id="study-topic-chips"></div>
+      <div id="study-list"></div>
+    </div>
+
+    <!-- ══════════════ RESULTS ══════════════ -->
+    <div id="screen-results" class="screen">
+      <div class="res-hero">
+        <div class="res-pct" id="res-pct">0%</div>
+        <div class="res-label" id="res-label">—</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-v" id="rs-correct" style="color:var(--green)">0</div><div class="stat-l">Correct</div></div>
+        <div class="stat-box"><div class="stat-v" id="rs-wrong" style="color:var(--red)">0</div><div class="stat-l">Wrong</div></div>
+        <div class="stat-box"><div class="stat-v" id="rs-streak" style="color:var(--amber)">0</div><div class="stat-l">Best Streak</div></div>
+        <div class="stat-box"><div class="stat-v" id="rs-pts">0</div><div class="stat-l">Points</div></div>
+        <div class="stat-box"><div class="stat-v" id="rs-time">—</div><div class="stat-l">Avg Time</div></div>
+        <div class="stat-box"><div class="stat-v" id="rs-acc">—</div><div class="stat-l">Accuracy</div></div>
+      </div>
+      <div id="rs-review-wrap" style="display:none">
+        <hr class="divider">
+        <div class="section-head" style="margin-bottom:1rem">Wrong answers to review</div>
+        <div id="rs-review"></div>
+      </div>
+      <div class="res-actions">
+        <button class="btn btn-ghost" onclick="quitToHome()">Menu</button>
+        <button class="btn btn-ink" onclick="startGame()">Play Again →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  FULL QUESTION BANK
+// ═══════════════════════════════════════════
+const QUESTIONS = [
+  // ── GLUTEAL REGION ──
+  {subj:"anatomy",topic:"Gluteal Region",type:"Origin",q:"Where does <strong>Gluteus Maximus</strong> originate?",a:"Posterior surface of ilium, sacrum & coccyx",wrong:["Iliac fossa","Anterior surface of sacrum","Ischial tuberosity"],fact:"Gluteus Maximus is the largest and most superficial gluteal muscle — the main hip extensor."},
+  {subj:"anatomy",topic:"Gluteal Region",type:"Insertion",q:"The <strong>superior fibres</strong> of Gluteus Maximus insert into:",a:"Iliotibial tract",wrong:["Gluteal tuberosity of femur","Greater trochanter","Lesser trochanter"],fact:"Inferior fibres insert into the gluteal tuberosity of the femur."},
+  {subj:"anatomy",topic:"Gluteal Region",type:"Nerve",q:"Which nerve innervates <strong>Gluteus Maximus</strong>?",a:"Inferior gluteal nerve (L5, S1, S2)",wrong:["Superior gluteal nerve (L4, L5, S1)","Obturator nerve (L2–L4)","Sciatic nerve (L4–S3)"],fact:"The superior gluteal nerve innervates Gluteus Medius, Minimus, and Tensor Fascia Lata."},
+  {subj:"anatomy",topic:"Gluteal Region",type:"Action",q:"What is the primary action of <strong>Gluteus Medius & Minimus</strong>?",a:"Hip abduction and medial rotation",wrong:["Extension and lateral rotation","Adduction of the thigh","Flexion at the hip"],fact:"Gluteus Medius inserts on the lateral surface of the greater trochanter; Minimus on the anterior aspect."},
+  {subj:"anatomy",topic:"Gluteal Region",type:"Fact",q:"<strong>Piriformis</strong> is a landmark because the sciatic nerve emerges:",a:"Inferior to piriformis",wrong:["Superior to piriformis","Through the piriformis muscle","Medial to piriformis"],fact:"Piriformis is the most superior deep gluteal muscle, originating from the anterior surface of the sacrum."},
+  {subj:"anatomy",topic:"Gluteal Region",type:"Insertion",q:"Where does <strong>Quadratus Femoris</strong> insert — unlike other deep gluteal muscles?",a:"Quadrate tubercle on the intertrochanteric crest",wrong:["Posterosuperior greater trochanter","Iliotibial tract","Medial lip intertubercular groove"],fact:"All other deep gluteal muscles insert on the posterosuperior greater trochanter."},
+  {subj:"anatomy",topic:"Gluteal Region",type:"Origin",q:"Where does <strong>Tensor Fascia Lata</strong> originate?",a:"ASIS (Anterior Superior Iliac Spine)",wrong:["AIIS","Iliac crest","Posterior surface of ilium"],fact:"TFL inserts into the anterior aspect of the iliotibial tract. Action: flexion, abduction, internal rotation of hip."},
+  {subj:"anatomy",topic:"Gluteal Region",type:"Nerve",q:"Which nerve innervates <strong>Obturator Externus</strong>?",a:"Obturator nerve (L2–L4)",wrong:["Nerve to quadratus femoris","Superior gluteal nerve","Inferior gluteal nerve"],fact:"Obturator Externus originates from the external surface of the obturator membrane and laterally rotates the thigh."},
+  // ── ANTERIOR THIGH ──
+  {subj:"anatomy",topic:"Thigh — Anterior",type:"Nerve",q:"Which nerve innervates all <strong>Quadriceps</strong>?",a:"Femoral nerve (L2–L4)",wrong:["Obturator nerve (L2–L4)","Sciatic nerve (L4–S3)","Musculocutaneous nerve (C5–C7)"],fact:"Pectineus also receives a branch from the obturator nerve."},
+  {subj:"anatomy",topic:"Thigh — Anterior",type:"Insertion",q:"All Quadriceps insert via the quadriceps tendon onto:",a:"Base of the patella",wrong:["Head of fibula","Medial tibial condyle","Pes anserinus"],fact:"The patellar tendon continues from the patella to the tibial tuberosity."},
+  {subj:"anatomy",topic:"Thigh — Anterior",type:"Fact",q:"Which is the only Quadriceps muscle that also crosses the <strong>hip joint</strong>?",a:"Rectus Femoris",wrong:["Vastus Medialis","Vastus Lateralis","Vastus Intermedius"],fact:"Rectus Femoris originates from the AIIS and the groove above the acetabulum, allowing it to flex the thigh at the hip."},
+  {subj:"anatomy",topic:"Thigh — Anterior",type:"Origin",q:"Where does <strong>Vastus Medialis</strong> originate?",a:"Intertrochanteric line & medial lip of linea aspera",wrong:["Greater trochanter & lateral lip linea aspera","Anterior & lateral femoral shaft","AIIS and groove above acetabulum"],fact:"The VMO (vastus medialis obliquus) resists lateral displacement of the patella."},
+  {subj:"anatomy",topic:"Thigh — Anterior",type:"Origin",q:"<strong>Sartorius</strong> is the longest muscle in the body. It originates from:",a:"ASIS (Anterior Superior Iliac Spine)",wrong:["AIIS","Ischial tuberosity","Iliac crest"],fact:"Sartorius inserts into the pes anserinus on the medial proximal tibia, alongside gracilis and semitendinosus."},
+  {subj:"anatomy",topic:"Thigh — Anterior",type:"Insertion",q:"Where does <strong>Iliopsoas</strong> insert?",a:"Lesser trochanter of the femur",wrong:["Greater trochanter","Medial tibial condyle","AIIS"],fact:"Iliopsoas = psoas major + iliacus. Prime hip flexor. Psoas major originates from T12–L5 vertebral bodies."},
+  {subj:"anatomy",topic:"Thigh — Anterior",type:"Fact",q:"<strong>Pectineus</strong> forms the base of the femoral triangle. Its action is:",a:"Adducts and flexes the thigh at the hip",wrong:["Extends and laterally rotates the thigh","Abducts and medially rotates the hip","Flexes the knee"],fact:"Pectineus originates from the pectineal line of the superior pubic ramus."},
+  // ── POSTERIOR THIGH ──
+  {subj:"anatomy",topic:"Thigh — Posterior",type:"Nerve",q:"All hamstrings are innervated by the tibial part of the sciatic nerve <strong>EXCEPT</strong>:",a:"Short head of Biceps Femoris — common peroneal nerve",wrong:["Long head of Biceps Femoris","Semitendinosus","Semimembranosus"],fact:"All hamstrings originate from the ischial tuberosity, except the short head of Biceps Femoris (linea aspera)."},
+  {subj:"anatomy",topic:"Thigh — Posterior",type:"Insertion",q:"Where does <strong>Biceps Femoris</strong> insert?",a:"Head of the fibula",wrong:["Upper medial tibia (pes anserinus)","Medial tibial condyle","Lateral tibial condyle"],fact:"Semitendinosus inserts into the pes anserinus; Semimembranosus inserts into the medial tibial condyle."},
+  {subj:"anatomy",topic:"Thigh — Posterior",type:"Action",q:"In addition to flexing the knee, <strong>Semitendinosus/Semimembranosus</strong> also:",a:"Extend the thigh at the hip and medially rotate the thigh/leg",wrong:["Laterally rotate the hip and extend the knee","Abduct the thigh","Adduct the thigh and flex the hip"],fact:"Biceps Femoris additionally laterally rotates the hip and knee."},
+  // ── MEDIAL THIGH ──
+  {subj:"anatomy",topic:"Thigh — Medial",type:"Nerve",q:"All medial thigh muscles are innervated by the obturator nerve <strong>EXCEPT</strong>:",a:"Hamstring component of Adductor Magnus — tibial sciatic nerve",wrong:["Adductor Longus","Adductor Brevis","Gracilis"],fact:"The adductor hiatus in Adductor Magnus is where femoral vessels pass."},
+  {subj:"anatomy",topic:"Thigh — Medial",type:"Origin",q:"Which medial thigh muscle forms the <strong>medial border</strong> of the femoral triangle?",a:"Adductor Longus",wrong:["Adductor Brevis","Gracilis","Pectineus"],fact:"Pectineus forms the base; Adductor Longus the medial border; Sartorius the lateral border."},
+  {subj:"anatomy",topic:"Thigh — Medial",type:"Insertion",q:"Where does <strong>Gracilis</strong> insert?",a:"Medial surface of proximal tibia (pes anserinus)",wrong:["Linea aspera of femur","Head of fibula","Medial tibial condyle"],fact:"Gracilis is the most superficial and medial muscle in the medial compartment. It also flexes the knee."},
+  // ── LEG ──
+  {subj:"anatomy",topic:"Leg — Anterior",type:"Nerve",q:"All anterior compartment leg muscles are innervated by:",a:"Deep peroneal (fibular) nerve (L4–L5)",wrong:["Superficial peroneal nerve (L4–S1)","Tibial nerve (L4–S3)","Common peroneal nerve"],fact:"All anterior compartment muscles originate from the medial fibular shaft, except Tibialis Anterior (lateral tibia)."},
+  {subj:"anatomy",topic:"Leg — Anterior",type:"Insertion",q:"<strong>Tibialis Anterior</strong> inserts into:",a:"Medial cuneiform and base of 1st metatarsal",wrong:["Plantar surface of navicular","Base of 5th metatarsal","Distal phalanx of great toe"],fact:"Tibialis Anterior also inverts the foot. All anterior compartment muscles dorsiflex."},
+  {subj:"anatomy",topic:"Leg — Lateral",type:"Nerve",q:"Both lateral compartment leg muscles are innervated by:",a:"Superficial peroneal (fibular) nerve (L4–S1)",wrong:["Deep peroneal nerve (L4–L5)","Tibial nerve (L4–S3)","Sural nerve"],fact:"The lateral compartment primarily everts the foot. Peroneus Longus also plantarflexes."},
+  {subj:"anatomy",topic:"Leg — Lateral",type:"Insertion",q:"<strong>Peroneus Longus</strong> inserts into:",a:"Plantar surface of medial cuneiform and base of 1st metatarsal",wrong:["Tubercle on base of 5th metatarsal","Dorsal surface of intermediate cuneiform","Navicular tuberosity"],fact:"Peroneus Brevis inserts on the tubercle at the base of the 5th metatarsal."},
+  {subj:"anatomy",topic:"Leg — Posterior",type:"Insertion",q:"All 3 superficial posterior leg muscles insert via the calcaneal tendon onto:",a:"Calcaneal tuberosity",wrong:["Base of 5th metatarsal","Plantar surface of navicular","Distal phalanx of great toe"],fact:"Gastrocnemius, Plantaris, and Soleus all form the calcaneal (Achilles) tendon."},
+  {subj:"anatomy",topic:"Leg — Posterior",type:"Origin",q:"<strong>Gastrocnemius</strong> originates from:",a:"Lateral and medial femoral condyles",wrong:["Soleal line of tibia","Posterior surface of fibula","Interosseous membrane"],fact:"Because it crosses the knee, Gastrocnemius also assists knee flexion. Soleus originates from the soleal line."},
+  {subj:"anatomy",topic:"Leg — Posterior",type:"Action",q:"<strong>Popliteus</strong> 'unlocks' the knee by:",a:"Rotating the femur on the tibia so knee flexion can begin",wrong:["Plantarflexing the foot","Flexing the lateral 4 toes","Inverting and plantarflexing the foot"],fact:"Popliteus originates from the lateral femoral condyle and horn of the lateral meniscus."},
+  {subj:"anatomy",topic:"Leg — Posterior",type:"Action",q:"<strong>Tibialis Posterior</strong> primarily:",a:"Plantarflexes and inverts the foot, maintaining the medial arch",wrong:["Dorsiflexes and everts","Flexes the great toe","Extends the lateral 4 toes"],fact:"Its tendon passes posterior to the medial malleolus to insert on the navicular and medial cuneiform."},
+  // ── PECTORAL ──
+  {subj:"anatomy",topic:"Pectoral Region",type:"Nerve",q:"<strong>Pectoralis Major</strong> is innervated by:",a:"Medial pectoral nerve (C8–T1) and lateral pectoral nerve (C5–7)",wrong:["Thoracodorsal nerve and long thoracic nerve","Axillary nerve and radial nerve","Suprascapular and dorsal scapular nerve"],fact:"Pectoralis Major has a sternal head and clavicular head. Both form the anterior wall of the axilla with Pec Minor."},
+  {subj:"anatomy",topic:"Pectoral Region",type:"Insertion",q:"<strong>Pectoralis Minor</strong> inserts into:",a:"Coracoid process of the scapula",wrong:["Intertubercular sulcus of the humerus","Acromion","Medial border of scapula"],fact:"Pectoralis Minor originates from the 3rd–5th ribs. It stabilises the scapula by drawing it anteroinferiorly."},
+  {subj:"anatomy",topic:"Pectoral Region",type:"Action",q:"<strong>Serratus Anterior</strong> is innervated by the long thoracic nerve (C5–7). Its main actions are:",a:"Protract the scapula and hold it against the thorax; enables arm abduction above 90°",wrong:["Elevate the scapula and rotate it during arm abduction","Retract the scapula and depress the clavicle","Medially rotate the arm and adduct it"],fact:"Damage to the long thoracic nerve causes 'winging' of the scapula. Serratus Anterior forms the medial axilla wall."},
+  // ── SHOULDER ──
+  {subj:"anatomy",topic:"Shoulder",type:"Nerve",q:"<strong>Deltoid</strong> is innervated by:",a:"Axillary nerve (C5, C6) — posterior cord of brachial plexus",wrong:["Radial nerve (C5–T1)","Musculocutaneous nerve (C5–C7)","Suprascapular nerve"],fact:"Anterior fibres: flex/medially rotate. Middle fibres: abduct 15–90°. Posterior: extend/laterally rotate."},
+  {subj:"anatomy",topic:"Shoulder",type:"Fact",q:"Which rotator cuff muscle <strong>medially rotates</strong> the arm?",a:"Subscapularis — innervated by upper/lower subscapular nerve",wrong:["Supraspinatus — suprascapular nerve","Infraspinatus — suprascapular nerve","Teres Minor — axillary nerve"],fact:"SITS = Supraspinatus, Infraspinatus, Teres Minor (all lateral rotators), Subscapularis (medial rotator)."},
+  {subj:"anatomy",topic:"Shoulder",type:"Action",q:"<strong>Supraspinatus</strong> initiates abduction from:",a:"0–15° then assists deltoid from 15–90°",wrong:["15–90° only","0–90° as the primary abductor","90–180° with trapezius"],fact:"Supraspinatus originates from the supraspinous fossa and inserts on the greater tubercle."},
+  {subj:"anatomy",topic:"Shoulder",type:"Nerve",q:"<strong>Trapezius</strong> is innervated by:",a:"Spinal accessory nerve (CN XI) with proprioceptor fibres from C3/C4",wrong:["Dorsal scapular nerve","Long thoracic nerve","Thoracodorsal nerve"],fact:"Trapezius is the most superficial back muscle. Upper fibres elevate, middle retract, lower fibres depress scapula."},
+  {subj:"anatomy",topic:"Shoulder",type:"Nerve",q:"<strong>Latissimus Dorsi</strong> is innervated by:",a:"Thoracodorsal nerve",wrong:["Dorsal scapular nerve","Axillary nerve","Long thoracic nerve"],fact:"Latissimus Dorsi: extends, adducts, and medially rotates the upper limb. Originates T6–T12, iliac crest, inferior 3 ribs."},
+  // ── ARM ──
+  {subj:"anatomy",topic:"Arm",type:"Nerve",q:"All anterior arm muscles (BBC — Biceps, Brachialis, Coracobrachialis) are innervated by:",a:"Musculocutaneous nerve (C5–C7)",wrong:["Radial nerve (C5–T1)","Median nerve (C6–T1)","Ulnar nerve (C8–T1)"],fact:"BBC = Biceps Brachii, Brachialis, Coracobrachialis."},
+  {subj:"anatomy",topic:"Arm",type:"Action",q:"The primary action of <strong>Biceps Brachii</strong> is:",a:"Supination of the forearm",wrong:["Extension of the forearm","Pronation","Medial rotation of the shoulder"],fact:"Biceps reflex tests C6. Biceps has no attachment to the humerus — short head from coracoid, long head from supraglenoid tubercle."},
+  {subj:"anatomy",topic:"Arm",type:"Fact",q:"<strong>Brachialis</strong> forms the floor of the cubital fossa. It inserts into:",a:"Coronoid process of the ulna and ulnar tuberosity",wrong:["Radial tuberosity","Olecranon","Medial humeral shaft"],fact:"Brachialis is a pure elbow flexor (no supination). It also receives contributions from the radial nerve (C5–C6)."},
+  {subj:"anatomy",topic:"Arm",type:"Nerve",q:"<strong>Triceps Brachii</strong> is innervated by the radial nerve. Its reflex tests:",a:"Spinal cord segment C7",wrong:["C5","C6","C8"],fact:"Triceps has 3 heads: long (infraglenoid tubercle), lateral (humerus above radial groove), medial (below radial groove)."},
+  // ── FOREARM ANTERIOR ──
+  {subj:"anatomy",topic:"Forearm — Anterior",type:"Nerve",q:"All superficial anterior forearm muscles are innervated by the median nerve <strong>EXCEPT</strong>:",a:"Flexor Carpi Ulnaris (ulnar nerve, C8–T1)",wrong:["Pronator Teres","Palmaris Longus","Flexor Carpi Radialis"],fact:"The superficial anterior forearm muscles medial to lateral: PASS FAIL PASS FAIL — Pronator Teres, FCR, Palmaris Longus, FCU."},
+  {subj:"anatomy",topic:"Forearm — Anterior",type:"Action",q:"<strong>Flexor Carpi Radialis</strong> acts on the wrist to:",a:"Abduct (radially deviate) the wrist",wrong:["Adduct (ulnar deviate)","Pronate the forearm","Flex the elbow"],fact:"FCU adducts the wrist; FCR abducts — they work as antagonists for wrist deviation."},
+  {subj:"anatomy",topic:"Forearm — Anterior",type:"Nerve",q:"The <strong>medial (ulnar) half of FDP</strong> is innervated by the ulnar nerve and flexes:",a:"The little and ring fingers",wrong:["The index and middle fingers","All four fingers equally","The thumb"],fact:"The lateral (radial) half of FDP flexes the index and middle fingers and is innervated by the anterior interosseous branch of the median nerve."},
+  {subj:"anatomy",topic:"Forearm — Anterior",type:"Fact",q:"Flexor Digitorum Superficialis is a landmark because:",a:"The median nerve and ulnar artery pass between its two heads",wrong:["The radial nerve passes deep to it","It forms the floor of the carpal tunnel","It is the only forearm muscle not from the medial epicondyle"],fact:"FDS flexes the MCP and proximal IP joints of the four fingers. It is the intermediate layer."},
+  // ── FOREARM POSTERIOR ──
+  {subj:"anatomy",topic:"Forearm — Posterior",type:"Action",q:"<strong>Brachioradialis</strong> appears like an extensor but is actually:",a:"An elbow flexor in the mid-prone (neutral) position",wrong:["A pronator of the forearm","A supinator","A wrist extensor"],fact:"Brachioradialis originates from the proximal lateral supracondylar ridge and inserts at the distal radius."},
+  {subj:"anatomy",topic:"Forearm — Posterior",type:"Action",q:"<strong>Extensor Carpi Ulnaris</strong> acts to:",a:"Extend and adduct (ulnar deviate) the wrist",wrong:["Extend and abduct","Flex and adduct","Supinate and extend"],fact:"ECRL/ECRB extend and abduct; ECU extends and adducts — they are wrist deviation antagonists."},
+  {subj:"anatomy",topic:"Forearm — Posterior",type:"Fact",q:"The <strong>juncturae tendinum</strong> of Extensor Digitorum mean:",a:"Full extension of the middle/ring finger is prevented when adjacent fingers are flexed",wrong:["The tendons of FDP and FDS interdigitate","The lumbricals arise from these connections","The extensor hood wraps to the palmar side"],fact:"Juncturae tendinum are fibrous bands on the dorsum of the hand linking the 4 ED tendons."},
+  {subj:"anatomy",topic:"Forearm — Posterior",type:"Insertion",q:"<strong>Extensor Pollicis Longus</strong> inserts into the <strong>distal</strong> phalanx of the thumb. Extensor Pollicis Brevis inserts into:",a:"Base of the proximal phalanx of the thumb",wrong:["Distal phalanx of the thumb","Base of 1st metacarpal","Extensor hood of index finger"],fact:"Abductor Pollicis Longus inserts on the radial side of the base of the 1st metacarpal."},
+  // ── HAND ──
+  {subj:"anatomy",topic:"Hand",type:"Nerve",q:"Most intrinsic hand muscles are ulnar nerve. The median nerve exceptions are remembered as MEat LOAF:",a:"Lumbricals 1&2, Opponens Pollicis, Abductor Pollicis Brevis, Flexor Pollicis Brevis (superficial head)",wrong:["All 4 lumbricals, Opponens, APB, FPB","Lumbricals 3&4, ODM, ADM, FDM","Lumbricals 2&3, OP, APL, FPL"],fact:"The whole hand is ulnar, EXCEPT MEat LOAF (median nerve). Last 3 are thenar eminence muscles."},
+  {subj:"anatomy",topic:"Hand",type:"Action",q:"The mnemonic for interossei actions is <strong>DAB PAD</strong>:",a:"Dorsal ABducts, Palmar ADducts",wrong:["Dorsal ADducts, Palmar ABducts","Dorsal Abducts, Palmar Abducts","Dorsal Adducts, Palmar Adducts"],fact:"4 dorsal interossei abduct fingers; 3 palmar interossei adduct. All innervated by the ulnar nerve."},
+  {subj:"anatomy",topic:"Hand",type:"Action",q:"The <strong>Lumbricals</strong> (all 4) act to:",a:"Flex at MCP joints and extend at IP joints",wrong:["Abduct fingers","Adduct fingers","Extend at MCP and flex at IP joints"],fact:"Lumbricals originate from FDP tendons and insert onto the extensor hood. 1st & 2nd = median; 3rd & 4th = ulnar."},
+  {subj:"anatomy",topic:"Hand",type:"Nerve",q:"Which lumbricals are innervated by the <strong>median nerve</strong>?",a:"1st and 2nd (lateral lumbricals)",wrong:["3rd and 4th","All 4","None — all ulnar"],fact:"This distinction underlies the difference between ulnar claw and hand of benediction patterns."},
+  {subj:"anatomy",topic:"Hand",type:"Origin",q:"<strong>Adductor Pollicis</strong> originates from:",a:"Transverse head: 3rd metacarpal; Oblique head: capitate & 2nd/3rd metacarpal",wrong:["Scaphoid and flexor retinaculum","Hook of hamate and flexor retinaculum","Pisiform and tendon of FCU"],fact:"Adductor Pollicis inserts on the proximal phalanx of the thumb and adducts it."},
+  // ═══ GENERAL MEDICINE ═══
+  // ── RESPIRATORY ──
+  {subj:"genmed",topic:"Respiratory",type:"Definition",q:"How is <strong>chronic bronchitis</strong> defined clinically?",a:"Sputum production for 3 months in 2 consecutive years",wrong:["Airway obstruction with FEV1/FVC <0.7","Irreversible dilation of the bronchial tree","Sputum production for 6 months in any one year"],fact:"The Reid Index measures gland layer/bronchial wall thickness. Normal ~0.3; doubles in chronic bronchitis."},
+  {subj:"genmed",topic:"Respiratory",type:"Fact",q:"<strong>Pink puffers</strong> in COPD have:",a:"Near-normal PaO2, low/normal PaCO2 — breathless but not cyanosed",wrong:["Low PaO2 and high PaCO2 — cyanosed but not breathless","Low PaO2 and low PaCO2 — both breathless and cyanosed","High PaO2 — polycythaemia dominant feature"],fact:"Blue bloaters have decreased alveolar ventilation, rely on hypoxic drive, and may develop cor pulmonale."},
+  {subj:"genmed",topic:"Respiratory",type:"Fact",q:"<strong>Panacinar emphysema</strong> is associated with:",a:"Alpha-1 antitrypsin deficiency — affects lower lobes",wrong:["Smoking — upper lobes, centriacinar","Spontaneous pneumothorax — paraseptal","Asthma — reversible"],fact:"Centriacinar (centrilobular) emphysema is associated with smoking and seen in upper lobes."},
+  {subj:"genmed",topic:"Respiratory",type:"Organism",q:"Which organism causes lobar pneumonia with <strong>rusty sputum</strong>, detectable by urinary antigen?",a:"Streptococcus pneumoniae",wrong:["Haemophilus influenzae","Mycoplasma pneumoniae","Legionella pneumophila"],fact:"S. pneumoniae may appear with herpes labialis. It is the commonest community-acquired pneumonia pathogen."},
+  {subj:"genmed",topic:"Respiratory",type:"Organism",q:"Legionella pneumophila should be suspected if 3 of 4 of these are present:",a:"Prodromal viral illness, confusion, lymphopenia, hyponatraemia",wrong:["Haemoptysis, clubbing, weight loss, night sweats","Rusty sputum, lobar consolidation, herpes labialis, positive urinary antigen","Myalgia, arthralgia, headache, normal CXR"],fact:"Legionella is linked to stagnant water. Treatment: clarithromycin or rifampicin."},
+  {subj:"genmed",topic:"Respiratory",type:"Definition",q:"<strong>Bronchiectasis</strong> is defined as:",a:"Localised, irreversible dilation of the bronchial tree due to destruction of muscle and elastic tissue",wrong:["Permanent dilation of airspaces distal to the terminal bronchiole without fibrosis","Reversible airway obstruction from bronchospasm","Focal inflammation of conductive airways spreading to acini"],fact:"Main organisms in bronchiectasis: H. influenzae, Strep. pneumoniae, Staph. aureus, Pseudomonas aeruginosa."},
+  {subj:"genmed",topic:"Respiratory",type:"Histology",q:"The histological hallmarks of <strong>asthma</strong> include all EXCEPT:",a:"Psammoma bodies",wrong:["Charcot-Leyden crystals","Curschmann's spirals","Creola bodies (clumps of sloughed epithelium)"],fact:"Psammoma bodies are found in papillary thyroid cancer. Asthma also shows mucus plugs and thickened basement membrane."},
+  // ── CARDIOLOGY ──
+  {subj:"genmed",topic:"Cardiology",type:"ECG",q:"A <strong>P wave</strong> on ECG represents:",a:"Atrial depolarisation",wrong:["Ventricular depolarisation","Ventricular repolarisation","AV nodal delay"],fact:"PR interval (0.12–0.20s, 3–5 small squares) represents the physiological AV nodal delay allowing ventricular filling."},
+  {subj:"genmed",topic:"Cardiology",type:"ECG",q:"Normal QRS duration is:",a:"0.08–0.12 seconds (2–3 small squares)",wrong:["0.12–0.20 seconds","<0.04 seconds","<0.44 seconds"],fact:"QRS >0.12s (>3 small squares) indicates bundle branch block or ventricular conduction delay."},
+  {subj:"genmed",topic:"Cardiology",type:"ECG",q:"In <strong>LBBB</strong>, the pattern seen on ECG is:",a:"QRS >0.12s, broad 'M' (W) shape in V5/V6, no septal Q waves, inverted T waves in I, aVL, V5–V6",wrong:["QRS >0.12s, 'RSR' pattern in V1, dominant R in V1, deep S in V6","QRS >0.12s, delta wave, short PR interval","QRS >0.12s, tall tented T waves"],fact:"WilliAM MorroW: W in V1 = LBBB; M in V1 = RBBB. LBBB causes include cardiomyopathy, acute MI, hypertension."},
+  {subj:"genmed",topic:"Cardiology",type:"ECG",q:"ST depression on ECG is diagnostic of:",a:"Myocardial ischaemia",wrong:["Acute STEMI","Pericarditis","Hyperkalaemia"],fact:"Concave ST elevation in all 12 leads = pericarditis. ST elevation >2mm chest / >1mm limb leads = possible MI."},
+  {subj:"genmed",topic:"Cardiology",type:"ECG",q:"Normal cardiac axis lies between:",a:"-30° and +90°",wrong:["0° and +120°","-90° and +90°","0° and +180°"],fact:"RAD (>+90°): RVH, PE, COPD. LAD (<-30°): LVH, inferior MI, left anterior fascicular block."},
+  {subj:"genmed",topic:"Cardiology",type:"ECG",q:"The ECG change associated with <strong>hyperkalaemia</strong> is:",a:"Tall tented T waves",wrong:["Prolonged QT interval","Delta wave and short PR","'Reverse tick' ST depression"],fact:"Digoxin causes 'reverse tick' ST depression. Hypokalaemia causes flat T waves and U waves."},
+  {subj:"genmed",topic:"Cardiology",type:"Fact",q:"Which leads are the <strong>lateral leads</strong> on a 12-lead ECG?",a:"V5, V6, I, and aVL",wrong:["V1 and V2","V3 and V4","II, III, and aVF"],fact:"Septal: V1, V2. Anterior: V3, V4. Lateral: V5, V6, I, aVL. Inferior: II, III, aVF."},
+  {subj:"genmed",topic:"Cardiology",type:"ECG",q:"Right bundle branch block (RBBB) causes:",a:"'RSR' pattern in V1, dominant R in V1, inverted T waves V1–V3, deep wide S in V6",wrong:["Broad M pattern in V5/V6, no septal Q waves","Delta waves and short PR interval","Tall tented T waves in precordial leads"],fact:"RBBB causes include normal variant, COPD, PE, ASD, VSD, and tricuspid/pulmonary valve disease."},
+  // ── ENDOCRINOLOGY ──
+  {subj:"genmed",topic:"Endocrinology",type:"Fact",q:"TSH is released from the <strong>anterior pituitary</strong> in response to:",a:"TRH from the hypothalamus",wrong:["CRH from the hypothalamus","Cortisol from the adrenal cortex","GnRH from the hypothalamus"],fact:"TSH acts on the thyroid to release T4 and lesser amounts of T3. T3 is 5× more potent; mostly from peripheral conversion of T4."},
+  {subj:"genmed",topic:"Endocrinology",type:"Signs",q:"Clinical signs of <strong>hyperthyroidism</strong> include:",a:"Tachycardia, AF, fine tremor, palmar erythema, lid lag/retraction, goitre, bruit",wrong:["Bradycardia, slow reflexes, dry skin, puffy face, non-pitting oedema","Hypertension, moon face, central obesity, purple striae","Postural hypotension, pigmentation, weight loss, salt craving"],fact:"TSH is suppressed in hyperthyroidism due to negative T3/T4 feedback. AF occurs in 10–25% of hyperthyroid patients."},
+  {subj:"genmed",topic:"Endocrinology",type:"Fact",q:"Graves' disease accounts for <strong>2/3 of hyperthyroidism</strong> cases. It is associated with:",a:"TSH receptor antibodies, HLA-DR3, smooth goitre, and other autoimmune disease (vitiligo, T1DM, Addison's)",wrong:["Anti-thyroid peroxidase antibodies, asymmetric nodular goitre","Iodine deficiency, multinodular goitre, elderly patients","Post-viral thyroiditis, painful goitre, self-limiting"],fact:"Radioiodine destroys some thyroid tissue. Most patients become hypothyroid after treatment."},
+  {subj:"genmed",topic:"Endocrinology",type:"Treatment",q:"First-line rapid treatment for <strong>hyperthyroid symptom control</strong> is:",a:"Beta-blockers",wrong:["Carbimazole","Radioiodine","Levothyroxine"],fact:"Carbimazole prevents thyroid peroxidase from iodinating tyrosine residues. Risk of agranulocytosis — urgent FBC if sepsis."},
+  {subj:"genmed",topic:"Endocrinology",type:"Signs",q:"The mnemonic for <strong>hypothyroidism signs</strong> is BRADYCARDIC. Which of these is NOT one of those signs?",a:"Diarrhoea",wrong:["Bradycardia","Reflexes relax slowly","Dry thin hair and skin"],fact:"Hypothyroid causes constipation, not diarrhoea. BRADYCARDIC: Bradycardia, Reflexes slow, Ataxia, Dry skin/hair, Yawning/coma, Cold, Round face, Decreased intellect, Immobile, Constipation/oedema."},
+  {subj:"genmed",topic:"Endocrinology",type:"Treatment",q:"Treatment of hypothyroidism in a young healthy patient is:",a:"Levothyroxine 50–100μg/24h PO; review TSH at 12 weeks",wrong:["Liothyronine (T3) 20μg three times daily","Carbimazole 20–40mg/day","Hydrocortisone 20mg/day with fludrocortisone"],fact:"Thyroxine half-life ~7 days — wait 4 weeks before checking TSH after a dose change. In elderly: start at 25μg/24h."},
+  {subj:"genmed",topic:"Endocrinology",type:"Fact",q:"Which thyroid cancer carries a mortality approaching <strong>100%</strong>?",a:"Anaplastic thyroid cancer — associated with loss of p53, seen with multinodular goitre",wrong:["Papillary thyroid cancer (10YS ~98%)","Follicular thyroid cancer","Medullary thyroid cancer (5YS ~50%)"],fact:"Papillary cancer shows orphan-annie nuclei and psammoma bodies. Medullary cancer is associated with MEN2."},
+  {subj:"genmed",topic:"Endocrinology",type:"Fact",q:"<strong>Hashimoto's thyroiditis</strong> is characterised by:",a:"Very high anti-thyroid peroxidase antibodies, lymphocytic infiltration, goitre",wrong:["TSH receptor antibodies, smooth goitre, exophthalmos","Anti-dsDNA antibody, butterfly rash, renal involvement","Anti-centromere antibody, CREST syndrome"],fact:"Hashimoto's usually affects women aged 60–70. Can be hypothyroid or euthyroid; rarely initial 'Hashitoxicosis'."},
+  // ── NEUROLOGY ──
+  {subj:"genmed",topic:"Neurology",type:"Fact",q:"MND is distinct from MS, polyneuropathies and myasthenia gravis because it has:",a:"No sensory loss, no sphincter disturbance, no eye involvement",wrong:["No motor involvement — only sensory loss","No cognitive features whatsoever","Only UMN signs with no LMN features"],fact:"UMN signs: spasticity, brisk reflexes, extensor plantars. LMN signs: wasting, fasciculation of tongue/abdomen/thigh."},
+  {subj:"genmed",topic:"Neurology",type:"Treatment",q:"Riluzole prolongs life in MND by approximately 3 months. Its mechanism is:",a:"Na⁺-channel blocker inhibiting glutamate release",wrong:["Increases dopaminergic transmission","GABA-B agonist reducing spasticity","Acetylcholinesterase inhibitor"],fact:"Riluzole: monitor LFTs 3-monthly; contraindicated in hepatic/renal disease. SE: vomiting, tachycardia, somnolence."},
+  {subj:"genmed",topic:"Neurology",type:"Seizure",q:"Temporal lobe seizures characteristically cause:",a:"Automatisms, déjà vu/jamais vu, emotional disturbance, olfactory/gustatory hallucinations",wrong:["Jacksonian march, post-ictal Todd's palsy, posturing","Tingling and numbness","Visual phenomena — spots, lines, flashes"],fact:"Frontal lobe: Jacksonian march, posturing. Parietal: sensory disturbances. Occipital: visual phenomena."},
+  {subj:"genmed",topic:"Neurology",type:"Fact",q:"<strong>Horner's syndrome</strong> is characterised by which triad?",a:"Miosis, partial ptosis, anhidrosis — all ipsilateral to the lesion",wrong:["Mydriasis, complete ptosis, diplopia — contralateral","Nystagmus, ataxia, ophthalmoplegia","Proptosis, lid retraction, conjunctival oedema"],fact:"A Pancoast tumour is a classic 2nd-order neuron cause of Horner's syndrome."},
+  {subj:"genmed",topic:"Neurology",type:"Fact",q:"<strong>Pseudobulbar palsy</strong> differs from true bulbar palsy in that it is:",a:"A UMN lesion causing increased jaw jerk, slow tongue, and emotional incontinence (PBA)",wrong:["An LMN lesion causing a flaccid fasciculating tongue and absent jaw jerk","A cerebellar lesion causing dysarthria and nystagmus","An extrapyramidal lesion causing hypophonia and tremor"],fact:"PBA (pseudobulbar affect) = mood-incongruent laughing or weeping. Seen in MND, MS, stroke, central pontine myelinolysis."},
+  {subj:"genmed",topic:"Neurology",type:"Fact",q:"The <strong>split hand sign</strong> in ALS means:",a:"Thenar wasting with the hypothenar eminence relatively spared",wrong:["Bilateral wasting of all intrinsic muscles equally","Inability to open the hand due to spasticity","Asymmetric weakness of index and middle fingers only"],fact:"ALS = amyotrophic lateral sclerosis — the archetypal MND pattern (50%), with both UMN and LMN signs."},
+  // ── RENAL ──
+  {subj:"genmed",topic:"Renal",type:"Physiology",q:"The kidneys receive what percentage of cardiac output?",a:"25%",wrong:["10%","15%","40%"],fact:"The macula densa detects tubular sodium concentration and triggers afferent arteriole contraction."},
+  {subj:"genmed",topic:"Renal",type:"Physiology",q:"The juxtaglomerular cells secrete renin in response to:",a:"Low afferent arteriole pressure, low tubular sodium (macula densa), sympathetic stimulation",wrong:["High blood pressure, high sodium, parasympathetic stimulation","Low serum potassium, high ADH, carotid sinus stimulation","High angiotensin II, low aldosterone, renal hypoxia"],fact:"Kidneys synthesise erythropoietin (EPO) and activated vitamin D in addition to regulating BP."},
+  {subj:"genmed",topic:"Renal",type:"Definition",q:"A UTI is defined as a pure growth of how many organisms per mL of fresh MSU?",a:">10⁵ organisms per mL",wrong:[">10³",">10⁴","Any growth of organisms"],fact:"Complicated UTI: male, child, immunocompromised, pregnant, structural abnormality, or recurrent."},
+  {subj:"genmed",topic:"Renal",type:"Fact",q:"Symptoms of renal failure typically only appear when function falls below:",a:"20–30% of normal",wrong:["50%","70%","10%"],fact:"Symptoms: fatigue/pallor (EPO deficiency), breathlessness, leg swelling, hypertension, nausea, itch, bone pain."},
+  {subj:"genmed",topic:"Renal",type:"Fact",q:"Secondary hypertension accounts for ~15% of all hypertension. Which is the commonest cause?",a:"Chronic renal disease",wrong:["Conn's syndrome (primary hyperaldosteronism)","Phaeochromocytoma","Cushing's syndrome"],fact:"Essential hypertension accounts for ~85% of hypertension. Renal vascular disease, endocrine disorders, and coarctation are other secondary causes."},
+  // ── HAEMATOLOGY ──
+  {subj:"genmed",topic:"Haematology",type:"Definition",q:"<strong>Microcytic anaemia</strong> (low MCV) is caused by:",a:"Iron deficiency anaemia, thalassaemia, or sideroblastic anaemia",wrong:["B12/folate deficiency, alcohol, hypothyroidism","Acute blood loss, haemolysis, renal failure, chronic disease","Myelodysplastic syndromes, cytotoxics, marrow infiltration"],fact:"Normal MCV = 76–96 fL. In thalassaemia and sideroblastic anaemia, iron and ferritin are raised with low TIBC."},
+  {subj:"genmed",topic:"Haematology",type:"Signs",q:"Chronic <strong>iron deficiency anaemia</strong> causes which classic signs?",a:"Koilonychia, atrophic glossitis, angular cheilosis, post-cricoid webs (Plummer-Vinson syndrome)",wrong:["Macroglossia, peripheral neuropathy, subacute combined degeneration of cord","Jaundice, splenomegaly, reticulocytosis","Petechiae, bruising, gum bleeding"],fact:"IDA affects up to 14% of menstruating women. GI blood loss is the most common cause in adults."},
+  {subj:"genmed",topic:"Haematology",type:"Treatment",q:"Treatment of iron deficiency anaemia: ferrous sulphate 200mg/8h PO. Haemoglobin should rise approximately:",a:"10g/L per week",wrong:["5g/L per week","15g/L per week","20g/L per week"],fact:"Continue iron for at least 3 months after Hb normalises to replenish stores. SE: nausea, black stools, constipation."},
+  {subj:"genmed",topic:"Haematology",type:"Fact",q:"The <strong>anaemia of chronic disease</strong> is characterised by:",a:"Mild normocytic anaemia, normal ferritin, normal/low TIBC — due to poor iron use in erythropoiesis",wrong:["Microcytic anaemia, low ferritin, raised TIBC","Macrocytic anaemia, raised MCV, hypersegmented neutrophils, low B12","Haemolytic anaemia, raised bilirubin, low haptoglobin"],fact:"It is the commonest anaemia in hospital inpatients. Hepcidin plays a key role. Causes: infection, RA, malignancy, renal failure."},
+  {subj:"genmed",topic:"Haematology",type:"Fact",q:"A blood transfusion is generally only considered in anaemia if:",a:"Hb <70g/L (or <80g/L in acute haemorrhage with active peptic ulcer)",wrong:["Hb <100g/L regardless of symptoms","The patient is symptomatic at any Hb level","Hb <90g/L in all chronic anaemias"],fact:"Chronic anaemia is better tolerated than acute. Treating the underlying cause is always the priority."},
+  {subj:"genmed",topic:"Haematology",type:"Fact",q:"<strong>Multiple myeloma</strong> is characterised by a monoclonal band on electrophoresis. Its main complications include:",a:"Lytic bone lesions, hypercalcaemia, renal impairment, recurrent infections, anaemia",wrong:["Lymphadenopathy, splenomegaly, Reed-Sternberg cells","Petechiae, bruising, thrombocytopenia, DIC","Polycythaemia, hyperviscosity, erythromelalgia, itching after hot bath"],fact:"Myeloma: CRAB — hyperCalcaemia, Renal impairment, Anaemia, Bone lesions. Treat bone pain with bisphosphonates."},
+  {subj:"genmed",topic:"Haematology",type:"Fact",q:"Polycythaemia rubra vera is a malignant proliferation with which mutation in >90% of cases?",a:"JAK2 V617F mutation",wrong:["BCR-ABL translocation (Philadelphia chromosome)","BRCA1/2 mutation","Factor V Leiden mutation"],fact:"PV presents with itch after a hot bath, erythromelalgia, facial plethora, splenomegaly. Treat with venesection to keep HCT <0.45."},
+  // ── GASTROENTEROLOGY ──
+  {subj:"genmed",topic:"Gastroenterology",type:"Diagnosis",q:"NICE diagnostic criteria for <strong>IBS</strong> require at least a 6-month history of:",a:"Abdominal pain/discomfort relieved by defecation OR associated with altered bowel habit, plus ≥2 supporting features",wrong:["Bloody diarrhoea, weight loss and anaemia","Epigastric pain relieved by eating and positive H. pylori serology","Jaundice, pale stools and dark urine"],fact:"IBS: 2:1 female-to-male, presents <40 years. Faecal calprotectin if IBD suspected. Mebeverine for colic."},
+  {subj:"genmed",topic:"Gastroenterology",type:"Fact",q:"IBS subclasses IBS-C, IBS-D, and IBS-M refer to:",a:"Constipation-predominant, diarrhoea-predominant, and mixed bowel habit respectively",wrong:["IBS with Crohn's features, diverticular disease, or malabsorption","IBS classified by severity: mild, moderate, or severe","IBS classified by aetiology: infective, dietary, or psychological"],fact:"Loperamide (max 16mg/day) for IBS-D; bisacodyl for IBS-C. Refer if red flag symptoms."},
+  // ── DERMATOLOGY ──
+  {subj:"genmed",topic:"Dermatology",type:"Fact",q:"<strong>Atopic eczema</strong> is associated with atopic march. What is the primary pathophysiological defect?",a:"Primary defect in skin barrier function leading to increased water loss and sensitivity to irritants",wrong:["IgE-mediated immediate hypersensitivity to common allergens","Type IV cell-mediated (delayed) hypersensitivity","Malassezia yeast overgrowth causing sebaceous gland inflammation"],fact:"Atopic eczema affects flexural surfaces. Treat with emollients + topical steroids in a ladder fashion."},
+  {subj:"genmed",topic:"Dermatology",type:"Fact",q:"<strong>Eczema herpeticum</strong> occurs in atopic eczema. The key clinical clue and treatment are:",a:"Pain rather than itch is the clue; treat with acyclovir — admit if eye involvement suspected",wrong:["Itchy golden crust; treat with topical fusidic acid","Dome-shaped papules; self-limiting viral infection","Intensely itchy blisters on hands/feet; treat with potent topical steroids"],fact:"Always admit with suspected eczema herpeticum — HSV can spread to conjunctiva causing scarring."},
+  {subj:"genmed",topic:"Dermatology",type:"Fact",q:"<strong>Psoriasis</strong> triggers include all EXCEPT:",a:"Paracetamol",wrong:["Lithium and beta-blockers","Streptococcal infection (→ guttate psoriasis)","Physical trauma (Koebner phenomenon)"],fact:"Psoriasis drug triggers: Lithium, beta-blockers, ACE-inhibitors, antimalarials. Steroid withdrawal causes rebound."},
+  {subj:"genmed",topic:"Dermatology",type:"Fact",q:"The <strong>Auspitz sign</strong> in psoriasis is:",a:"Pin-point bleeding when a plaque is removed — due to thinning of rete pegs and angiogenesis",wrong:["A 'pencil-in-cup' appearance on X-ray due to bony resorption","Sausage-shaped dactylitis of fingers and toes","Nail pitting and oil-drop discolouration"],fact:"Chronic plaque psoriasis: salmon-pink plaques symmetrically on extensor surfaces. Treat: Vit D analogues → UVB → systemics."},
+  {subj:"genmed",topic:"Dermatology",type:"Fact",q:"<strong>Allergic contact dermatitis</strong> is which type of hypersensitivity reaction?",a:"Type IV — delayed cell-mediated (T-helper lymphocyte driven)",wrong:["Type I — IgE-mediated immediate hypersensitivity","Type II — antibody-mediated cytotoxicity","Type III — immune complex deposition"],fact:"Typical triggers: nickel, perfume, hair dye. Patch testing identifies the allergen. Avoidance is the treatment."},
+  {subj:"genmed",topic:"Dermatology",type:"Treatment",q:"Systemic methotrexate for psoriasis requires monitoring of:",a:"LFTs and looking for pulmonary fibrosis",wrong:["Renal function and blood pressure","Serum calcium and vitamin D levels","Full blood count and bone marrow biopsy"],fact:"Methotrexate is given weekly with folate supplements. Good in psoriatic arthritis. Ciclosporin: skin only; risks renal hypertension."},
+];
+
+// ═══════════════════════════════════════════
+//  MATCH PAIRS DATA (for match mode)
+// ═══════════════════════════════════════════
+const MATCH_SETS = [
+  {topic:"Gluteal Nerves", pairs:[
+    {l:"Gluteus Maximus",r:"Inferior gluteal nerve"},
+    {l:"Gluteus Medius",r:"Superior gluteal nerve"},
+    {l:"Tensor Fascia Lata",r:"Superior gluteal nerve"},
+    {l:"Obturator Externus",r:"Obturator nerve (L2–L4)"},
+    {l:"Piriformis",r:"Nerve to Piriformis"},
+    {l:"Quadratus Femoris",r:"Nerve to Quadratus Femoris"},
+  ]},
+  {topic:"Thigh Muscles — Insertions", pairs:[
+    {l:"Sartorius",r:"Pes anserinus (proximal tibia)"},
+    {l:"Gracilis",r:"Pes anserinus (proximal tibia)"},
+    {l:"Semitendinosus",r:"Pes anserinus (proximal tibia)"},
+    {l:"Biceps Femoris",r:"Head of fibula"},
+    {l:"Semimembranosus",r:"Medial tibial condyle"},
+    {l:"Iliopsoas",r:"Lesser trochanter"},
+  ]},
+  {topic:"Rotator Cuff", pairs:[
+    {l:"Subscapularis",r:"Medially rotates arm"},
+    {l:"Supraspinatus",r:"Abducts arm 0–15°"},
+    {l:"Infraspinatus",r:"Laterally rotates arm"},
+    {l:"Teres Minor",r:"Laterally rotates arm"},
+    {l:"Subscapularis nerve",r:"Upper/Lower subscapular nerve"},
+    {l:"Supraspinatus nerve",r:"Suprascapular nerve"},
+  ]},
+  {topic:"Anterior Forearm Muscles", pairs:[
+    {l:"FCU (Flexor Carpi Ulnaris)",r:"Ulnar nerve (C8–T1)"},
+    {l:"FCR (Flexor Carpi Radialis)",r:"Abducts the wrist"},
+    {l:"Palmaris Longus",r:"Absent in ~15% of population"},
+    {l:"FDP lateral half",r:"Median nerve (anterior interosseous)"},
+    {l:"FDP medial half",r:"Ulnar nerve"},
+    {l:"Pronator Teres",r:"Common flexor origin + coronoid process"},
+  ]},
+  {topic:"ECG Waveforms", pairs:[
+    {l:"P wave",r:"Atrial depolarisation"},
+    {l:"QRS complex",r:"Ventricular depolarisation"},
+    {l:"T wave",r:"Ventricular repolarisation"},
+    {l:"PR interval",r:"AV nodal delay (0.12–0.20s)"},
+    {l:"ST elevation (focal)",r:"Possible acute MI"},
+    {l:"ST depression",r:"Myocardial ischaemia"},
+  ]},
+  {topic:"Thyroid Pathology", pairs:[
+    {l:"Graves' disease",r:"TSH receptor antibodies"},
+    {l:"Hashimoto's thyroiditis",r:"Anti-thyroid peroxidase antibodies"},
+    {l:"Papillary thyroid cancer",r:"Orphan annie nuclei, psammoma bodies"},
+    {l:"Medullary thyroid cancer",r:"Calcitonin-secreting C-cells, MEN2"},
+    {l:"Anaplastic thyroid cancer",r:"Mortality ~100%, loss of p53"},
+    {l:"Follicular thyroid cancer",r:"Spreads early via blood, TSH sensitive"},
+  ]},
+  {topic:"Anaemia Classification", pairs:[
+    {l:"Microcytic (low MCV)",r:"Iron deficiency, thalassaemia, sideroblastic"},
+    {l:"Normocytic",r:"Chronic disease, acute blood loss, haemolysis"},
+    {l:"Macrocytic",r:"B12/folate deficiency, alcohol, hypothyroidism"},
+    {l:"Iron deficiency signs",r:"Koilonychia, angular cheilosis, glossitis"},
+    {l:"Anaemia of chronic disease",r:"Normal ferritin, normal/low TIBC"},
+    {l:"JAK2 V617F mutation",r:"Polycythaemia rubra vera"},
+  ]},
+  {topic:"Dermatology Conditions", pairs:[
+    {l:"Eczema herpeticum",r:"HSV — treat with acyclovir"},
+    {l:"Allergic contact dermatitis",r:"Type IV hypersensitivity"},
+    {l:"Auspitz sign",r:"Pin-point bleeding on plaque removal"},
+    {l:"Koebner phenomenon",r:"Psoriasis triggered by physical trauma"},
+    {l:"Guttate psoriasis",r:"Streptococcal infection → teardrop plaques"},
+    {l:"Seborrhoeic eczema",r:"Malassezia yeast overgrowth"},
+  ]},
+];
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+const ALL_TOPICS = [...new Set(QUESTIONS.map(q=>q.topic))];
+let S = {
+  mode:'quiz', selectedTopics:[...ALL_TOPICS], qCount:10,
+  queue:[], qi:0,
+  streak:0, bestStreak:0, pts:0, correct:0, wrong:0, lives:3,
+  wrongLog:[], answered:false,
+  timer:null, timerLeft:10,
+  tStart:0, totalTime:0,
+  fcFlipped:false, fcQueue:[], fci:0, fcKnown:new Set(),
+  blQueue:[], bli:0, blCorrect:0, blWrong:0,
+  mtSet:0, mtLeft:0, mtTotal:0, mtCorrect:0, mtWrong:0,
+  selectedLeft:null, selectedRight:null,
+};
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+function init(){
+  document.getElementById('q-total').textContent = QUESTIONS.length;
+  // subject chips
+  document.querySelectorAll('[data-subj]').forEach(c=>{
+    c.onclick=()=>toggleSubj(c);
+  });
+  // topic chips
+  const tc = document.getElementById('topic-chips');
+  ALL_TOPICS.forEach(t=>{
+    const subj = QUESTIONS.find(q=>q.topic===t)?.subj||'anatomy';
+    const c = document.createElement('div');
+    c.className='chip on '+(subj==='anatomy'?'anat':'genmed');
+    c.dataset.topic=t; c.dataset.subj=subj;
+    c.textContent=t;
+    c.onclick=()=>toggleTopic(t,c);
+    tc.appendChild(c);
+  });
+  // count chips
+  document.querySelectorAll('[data-val]').forEach(c=>{
+    c.onclick=()=>{
+      document.querySelectorAll('[data-val]').forEach(x=>x.classList.remove('on'));
+      c.classList.add('on');
+      S.qCount=parseInt(c.dataset.val)||9999;
+    };
+  });
+  // mode cards
+  document.querySelectorAll('.mode-card').forEach(c=>{
+    c.onclick=()=>{
+      document.querySelectorAll('.mode-card').forEach(x=>x.classList.remove('active'));
+      c.classList.add('active');
+      S.mode=c.dataset.mode;
+    };
+  });
+  // study topic chips
+  const stc = document.getElementById('study-topic-chips');
+  const allC = document.createElement('div');
+  allC.className='chip on'; allC.dataset.stopic='all'; allC.textContent='All';
+  allC.onclick=()=>stFilterTopic('all',allC);
+  stc.appendChild(allC);
+  ALL_TOPICS.forEach(t=>{
+    const c=document.createElement('div');
+    c.className='chip'; c.dataset.stopic=t; c.textContent=t;
+    c.onclick=()=>stFilterTopic(t,c);
+    stc.appendChild(c);
+  });
+}
+
+function toggleSubj(chip){
+  const subj=chip.dataset.subj;
+  chip.classList.toggle('on');
+  const isOn=chip.classList.contains('on');
+  document.querySelectorAll('[data-topic]').forEach(c=>{
+    if(c.dataset.subj===subj){
+      if(isOn) c.classList.add('on');
+      else c.classList.remove('on');
+    }
+  });
+  rebuildTopics();
+}
+function toggleTopic(t,chip){
+  const active=document.querySelectorAll('[data-topic].on');
+  if(chip.classList.contains('on') && active.length===1) return;
+  chip.classList.toggle('on');
+  rebuildTopics();
+}
+function rebuildTopics(){
+  S.selectedTopics=[];
+  document.querySelectorAll('[data-topic].on').forEach(c=>S.selectedTopics.push(c.dataset.topic));
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('screen-'+id).classList.add('on');
+}
+function quitToHome(){
+  clearInterval(S.timer);
+  showScreen('home');
+}
+function updateHdr(){
+  document.getElementById('hdr-streak').textContent=S.streak;
+  document.getElementById('hdr-pts').textContent=S.pts;
+}
+
+// ═══════════════════════════════════════════
+//  START GAME
+// ═══════════════════════════════════════════
+function startGame(){
+  clearInterval(S.timer);
+  S.streak=0; S.bestStreak=0; S.pts=0;
+  S.correct=0; S.wrong=0; S.lives=3;
+  S.wrongLog=[]; S.answered=false;
+  S.totalTime=0;
+  updateHdr();
+
+  if(S.mode==='study'){
+    buildStudyNotes();
+    showScreen('study');
+    return;
+  }
+  if(S.mode==='flashcard'){
+    startFlashcard();
+    return;
+  }
+  if(S.mode==='match'){
+    startMatch();
+    return;
+  }
+  if(S.mode==='blank'){
+    startBlank();
+    return;
+  }
+
+  let pool=QUESTIONS.filter(q=>S.selectedTopics.includes(q.topic));
+  if(!pool.length) pool=QUESTIONS;
+  S.queue=shuffle(pool).slice(0,Math.min(S.qCount,pool.length));
+  S.qi=0;
+  showScreen('quiz');
+  renderQ();
+}
+
+// ═══════════════════════════════════════════
+//  MULTIPLE CHOICE / TIMED / SURVIVAL
+// ═══════════════════════════════════════════
+function renderQ(){
+  if(S.qi>=S.queue.length){endGame();return;}
+  const q=S.queue[S.qi];
+  S.answered=false;
+  S.tStart=Date.now();
+
+  const pct=S.qi/S.queue.length*100;
+  document.getElementById('pbar').style.width=pct+'%';
+  const topicEl=document.getElementById('qm-topic');
+  topicEl.textContent=q.topic;
+  topicEl.className='qm-topic '+(q.subj==='anatomy'?'anat':'genmed');
+  document.getElementById('qm-count').textContent=(S.qi+1)+' / '+S.queue.length;
+  document.getElementById('q-badge').textContent=q.type;
+  document.getElementById('q-text').innerHTML=q.q;
+
+  // Lives
+  const lv=document.getElementById('qm-lives');
+  lv.textContent=S.mode==='survival'?'❤️'.repeat(S.lives)+'🖤'.repeat(3-S.lives):'';
+
+  // Feedback
+  const fb=document.getElementById('feedback');
+  fb.className='feedback';
+  document.getElementById('btn-next').style.display='none';
+
+  // Answers
+  const opts=shuffle([q.a,...q.wrong]);
+  const grid=document.getElementById('ans-grid');
+  grid.innerHTML='';
+  ['A','B','C','D'].forEach((k,i)=>{
+    if(!opts[i]) return;
+    const b=document.createElement('button');
+    b.className='ans-btn';
+    b.innerHTML='<span class="ans-key">'+k+'</span> '+opts[i];
+    b.onclick=()=>checkQ(opts[i],q,b);
+    grid.appendChild(b);
+  });
+
+  // Timer
+  clearInterval(S.timer);
+  const tw=document.getElementById('timer-wrap');
+  const tf=document.getElementById('timer-fill');
+  if(S.mode==='timed'){
+    tw.classList.remove('hidden');
+    S.timerLeft=10;
+    tf.style.width='100%';
+    tf.classList.remove('red');
+    S.timer=setInterval(()=>{
+      S.timerLeft--;
+      tf.style.width=(S.timerLeft/10*100)+'%';
+      if(S.timerLeft<=3) tf.classList.add('red');
+      if(S.timerLeft<=0){clearInterval(S.timer);timeoutQ(q);}
+    },1000);
+  } else {
+    tw.classList.add('hidden');
+  }
+}
+
+function checkQ(chosen,q,btn){
+  if(S.answered) return;
+  S.answered=true;
+  clearInterval(S.timer);
+  S.totalTime+=(Date.now()-S.tStart)/1000;
+  document.querySelectorAll('.ans-btn').forEach(b=>b.disabled=true);
+
+  const ok=chosen===q.a;
+  const fb=document.getElementById('feedback');
+  const nb=document.getElementById('btn-next');
+
+  if(ok){
+    btn.classList.add('correct');
+    S.correct++; S.streak++;
+    if(S.streak>S.bestStreak) S.bestStreak=S.streak;
+    const spd=S.mode==='timed'?Math.round(S.timerLeft/10*50):0;
+    const str=Math.min(S.streak-1,5)*20;
+    S.pts+=100+str+spd;
+    updateHdr();
+    fb.className='feedback ok show';
+    let head='✓ Correct!';
+    if(S.streak>=10) head='🔥 '+S.streak+' in a row! Beast mode.';
+    else if(S.streak>=5) head='🔥 '+S.streak+'-streak! +'+str+' bonus pts';
+    else if(S.streak>=3) head='⚡ '+S.streak+'-streak! +'+str+' bonus';
+    document.getElementById('fb-head').textContent=head;
+    document.getElementById('fb-body').textContent=q.fact;
+    if(S.streak===3||S.streak===5||S.streak===10) flashStreak(S.streak+'🔥');
+  } else {
+    btn.classList.add('wrong');
+    document.querySelectorAll('.ans-btn').forEach(b=>{
+      if(b.innerHTML.includes(q.a.replace(/[<>]/g,''))) b.classList.add('missed');
+    });
+    S.wrong++; S.streak=0;
+    S.wrongLog.push({q:q.q,yours:chosen,correct:q.a});
+    updateHdr();
+    if(S.mode==='survival'){
+      S.lives--;
+      document.getElementById('qm-lives').textContent='❤️'.repeat(S.lives)+'🖤'.repeat(3-S.lives);
+      if(S.lives<=0){
+        fb.className='feedback bad show';
+        document.getElementById('fb-head').textContent='💀 Out of lives!';
+        document.getElementById('fb-body').textContent='Correct answer: '+q.a;
+        nb.style.display='inline-flex'; nb.textContent='See Results';
+        nb.onclick=endGame; return;
+      }
+    }
+    fb.className='feedback bad show';
+    document.getElementById('fb-head').textContent='✗ Not quite';
+    document.getElementById('fb-body').textContent='Correct: '+q.a+'. '+q.fact;
+  }
+  nb.style.display='inline-flex';
+  nb.textContent=S.qi+1>=S.queue.length?'See Results →':'Next →';
+  nb.onclick=nextQ;
+}
+
+function timeoutQ(q){
+  if(S.answered) return;
+  S.answered=true;
+  document.querySelectorAll('.ans-btn').forEach(b=>{
+    b.disabled=true;
+    if(b.innerHTML.includes(q.a.replace(/[<>]/g,''))) b.classList.add('missed');
+  });
+  S.wrong++; S.streak=0;
+  S.wrongLog.push({q:q.q,yours:'(time up)',correct:q.a});
+  const fb=document.getElementById('feedback');
+  fb.className='feedback warn show';
+  document.getElementById('fb-head').textContent='⏱ Time\'s up!';
+  document.getElementById('fb-body').textContent='Correct: '+q.a;
+  const nb=document.getElementById('btn-next');
+  nb.style.display='inline-flex';
+  nb.textContent=S.qi+1>=S.queue.length?'See Results →':'Next →';
+  nb.onclick=nextQ;
+  updateHdr();
+}
+
+function nextQ(){
+  S.qi++;
+  document.getElementById('btn-next').onclick=nextQ;
+  renderQ();
+}
+
+// ═══════════════════════════════════════════
+//  FLASHCARD MODE
+// ═══════════════════════════════════════════
+function startFlashcard(){
+  let pool=QUESTIONS.filter(q=>S.selectedTopics.includes(q.topic));
+  if(!pool.length) pool=QUESTIONS;
+  S.fcQueue=shuffle(pool).slice(0,Math.min(S.qCount,pool.length));
+  S.fci=0; S.fcKnown=new Set(); S.fcFlipped=false;
+  showScreen('flashcard');
+  renderFC();
+}
+
+function renderFC(){
+  const q=S.fcQueue[S.fci];
+  S.fcFlipped=false;
+  document.getElementById('fc-inner').classList.remove('flipped');
+  document.getElementById('fc-front-q').innerHTML=q.q;
+  document.getElementById('fc-back-a').innerHTML=q.a;
+  const factEl=document.getElementById('fc-fact');
+  factEl.className='feedback';
+  document.getElementById('fc-fact-body').textContent=q.fact;
+  document.getElementById('fc-actions').style.display='none';
+  document.getElementById('fc-flip-hint').style.display='flex';
+  const topicEl=document.getElementById('fc-topic');
+  topicEl.textContent=q.topic;
+  topicEl.className='qm-topic '+(q.subj==='anatomy'?'anat':'genmed');
+  document.getElementById('fc-count').textContent=(S.fci+1)+' / '+S.fcQueue.length;
+  const pct=S.fci/S.fcQueue.length*100;
+  document.getElementById('fc-pbar').style.width=pct+'%';
+  document.getElementById('fc-prev').disabled=S.fci===0;
+  document.getElementById('fc-next').disabled=S.fci===S.fcQueue.length-1;
+}
+
+function flipCard(){
+  S.fcFlipped=!S.fcFlipped;
+  document.getElementById('fc-inner').classList.toggle('flipped',S.fcFlipped);
+  if(S.fcFlipped){
+    document.getElementById('fc-fact').className='feedback ok show';
+    document.getElementById('fc-actions').style.display='flex';
+    document.getElementById('fc-flip-hint').style.display='none';
+  }
+}
+
+function fcMark(known){
+  if(known) S.fcKnown.add(S.fci);
+  else S.fcKnown.delete(S.fci);
+  if(S.fci<S.fcQueue.length-1){
+    S.fci++;
+    renderFC();
+  } else {
+    // Show results
+    showFlashcardResults();
+  }
+}
+
+function fcNav(dir){
+  S.fci=Math.max(0,Math.min(S.fcQueue.length-1,S.fci+dir));
+  renderFC();
+}
+
+function showFlashcardResults(){
+  const known=S.fcKnown.size;
+  const total=S.fcQueue.length;
+  const pct=Math.round(known/total*100);
+  S.correct=known; S.wrong=total-known; S.pts=known*100;
+  document.getElementById('res-pct').textContent=pct+'%';
+  document.getElementById('res-pct').style.color=pct>=80?'var(--green)':pct>=60?'var(--amber)':'var(--red)';
+  document.getElementById('res-label').textContent=known+' of '+total+' cards marked as known';
+  document.getElementById('rs-correct').textContent=known;
+  document.getElementById('rs-wrong').textContent=total-known;
+  document.getElementById('rs-streak').textContent='—';
+  document.getElementById('rs-pts').textContent=S.pts;
+  document.getElementById('rs-time').textContent='—';
+  document.getElementById('rs-acc').textContent=pct+'%';
+  document.getElementById('rs-review-wrap').style.display='none';
+  showScreen('results');
+}
+
+// ═══════════════════════════════════════════
+//  FILL THE BLANK MODE
+// ═══════════════════════════════════════════
+function startBlank(){
+  let pool=QUESTIONS.filter(q=>S.selectedTopics.includes(q.topic));
+  if(!pool.length) pool=QUESTIONS;
+  S.blQueue=shuffle(pool).slice(0,Math.min(S.qCount,pool.length));
+  S.bli=0; S.blCorrect=0; S.blWrong=0;
+  showScreen('blank');
+  renderBlank();
+}
+
+function renderBlank(){
+  if(S.bli>=S.blQueue.length){endBlank();return;}
+  const q=S.blQueue[S.bli];
+  const pct=S.bli/S.blQueue.length*100;
+  document.getElementById('bl-pbar').style.width=pct+'%';
+  const topicEl=document.getElementById('bl-topic');
+  topicEl.textContent=q.topic;
+  topicEl.className='qm-topic '+(q.subj==='anatomy'?'anat':'genmed');
+  document.getElementById('bl-count').textContent=(S.bli+1)+' / '+S.blQueue.length;
+
+  // Build blank question: hide a key word from the answer
+  const words=q.a.split(/[\s,;]+/).filter(w=>w.length>3);
+  const target=words[Math.floor(Math.random()*words.length)];
+  const blankText='Complete: <em>'+q.q.replace(/<[^>]+>/g,'')+'</em><br><br>Answer: '+q.a.replace(target,'<input class="blank-input" id="blank-inp" placeholder="..." autocomplete="off">');
+  document.getElementById('blank-q').innerHTML=blankText;
+
+  // Options: target + 3 from wrong answers or other words
+  const wrongWords=q.wrong.flatMap(w=>w.split(/[\s,;]+/).filter(x=>x.length>3));
+  const optPool=shuffle([...new Set([...wrongWords])]).slice(0,3);
+  const allOpts=shuffle([target,...optPool.slice(0,3)]);
+
+  const optsEl=document.getElementById('blank-opts');
+  optsEl.innerHTML='';
+  allOpts.forEach(opt=>{
+    const d=document.createElement('div');
+    d.className='blank-opt';
+    d.textContent=opt;
+    d.onclick=()=>selectBlankOpt(opt,target,d,q);
+    optsEl.appendChild(d);
+  });
+
+  document.getElementById('bl-feedback').className='feedback';
+  document.getElementById('bl-next').style.display='none';
+}
+
+function selectBlankOpt(chosen,target,chip,q){
+  document.querySelectorAll('.blank-opt').forEach(c=>c.classList.add('used'));
+  const inp=document.getElementById('blank-inp');
+  if(!inp) return;
+  inp.value=chosen;
+  const ok=chosen===target;
+  inp.classList.add(ok?'ok':'bad');
+  const fb=document.getElementById('bl-feedback');
+  if(ok){
+    S.blCorrect++; S.streak++; S.pts+=100;
+    if(S.streak>S.bestStreak) S.bestStreak=S.streak;
+    fb.className='feedback ok show';
+    document.getElementById('bl-head').textContent='✓ Correct!';
+    document.getElementById('bl-body').textContent=q.fact;
+  } else {
+    S.blWrong++; S.streak=0;
+    S.wrongLog.push({q:q.q,yours:chosen,correct:q.a});
+    fb.className='feedback bad show';
+    document.getElementById('bl-head').textContent='✗ The word was: '+target;
+    document.getElementById('bl-body').textContent=q.fact;
+  }
+  updateHdr();
+  document.getElementById('bl-next').style.display='inline-flex';
+}
+
+function nextBlank(){
+  S.bli++;
+  renderBlank();
+}
+
+function endBlank(){
+  S.correct=S.blCorrect; S.wrong=S.blWrong;
+  const total=S.blCorrect+S.blWrong;
+  const pct=total>0?Math.round(S.blCorrect/total*100):0;
+  showResultsScreen(pct);
+}
+
+// ═══════════════════════════════════════════
+//  MATCH MODE
+// ═══════════════════════════════════════════
+function startMatch(){
+  S.mtSet=0; S.mtLeft=0; S.mtTotal=0; S.mtCorrect=0; S.mtWrong=0;
+  showScreen('match');
+  renderMatch();
+}
+
+function renderMatch(){
+  const available=MATCH_SETS.filter(ms=>
+    ms.pairs.some(p=>S.selectedTopics.some(t=>ms.topic.toLowerCase().includes(t.toLowerCase().split(' ')[0].toLowerCase())||true))
+  );
+  const set=available[S.mtSet % available.length];
+  const topic=document.getElementById('mt-topic');
+  topic.textContent='Match: '+set.topic;
+  topic.className='qm-topic';
+
+  const pairCount=6;
+  const selected=shuffle(set.pairs).slice(0,pairCount);
+  S.mtLeft=selected.length;
+  S.mtTotal+=selected.length;
+
+  const leftEl=document.getElementById('mt-left');
+  const rightEl=document.getElementById('mt-right');
+  leftEl.innerHTML=''; rightEl.innerHTML='';
+
+  const leftItems=shuffle(selected);
+  const rightItems=shuffle(selected);
+  S.selectedLeft=null; S.selectedRight=null;
+
+  leftItems.forEach(p=>{
+    const d=document.createElement('div');
+    d.className='match-item'; d.dataset.key=p.l; d.textContent=p.l;
+    d.onclick=()=>selectLeft(d,p.l,selected);
+    leftEl.appendChild(d);
+  });
+  rightItems.forEach(p=>{
+    const d=document.createElement('div');
+    d.className='match-item'; d.dataset.key=p.r; d.textContent=p.r;
+    d.onclick=()=>selectRight(d,p.r,selected);
+    rightEl.appendChild(d);
+  });
+
+  document.getElementById('mt-score-label').textContent='0 / '+pairCount+' matched';
+  document.getElementById('mt-feedback').className='feedback';
+  document.getElementById('mt-next').style.display='none';
+}
+
+function selectLeft(el,key,pairs){
+  if(el.classList.contains('matched')) return;
+  document.querySelectorAll('#mt-left .match-item:not(.matched)').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+  S.selectedLeft={el,key};
+  if(S.selectedRight) tryMatch(pairs);
+}
+function selectRight(el,key,pairs){
+  if(el.classList.contains('matched')) return;
+  document.querySelectorAll('#mt-right .match-item:not(.matched)').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+  S.selectedRight={el,key};
+  if(S.selectedLeft) tryMatch(pairs);
+}
+
+function tryMatch(pairs){
+  const lKey=S.selectedLeft.key;
+  const rKey=S.selectedRight.key;
+  const correctPair=pairs.find(p=>p.l===lKey);
+  const ok=correctPair && correctPair.r===rKey;
+
+  if(ok){
+    S.selectedLeft.el.classList.remove('selected');
+    S.selectedLeft.el.classList.add('matched');
+    S.selectedRight.el.classList.remove('selected');
+    S.selectedRight.el.classList.add('matched');
+    S.mtLeft--;
+    S.mtCorrect++;
+    S.pts+=80; S.streak++;
+    if(S.streak>S.bestStreak) S.bestStreak=S.streak;
+    updateHdr();
+    const matched=pairs.length-S.mtLeft;
+    document.getElementById('mt-score-label').textContent=matched+' / '+pairs.length+' matched';
+    if(S.mtLeft===0){
+      const fb=document.getElementById('mt-feedback');
+      fb.className='feedback ok show';
+      document.getElementById('mt-head').textContent='🎉 Round complete!';
+      document.getElementById('mt-body').textContent='All pairs matched. Great work!';
+      document.getElementById('mt-next').style.display='inline-flex';
+    }
+  } else {
+    S.selectedLeft.el.classList.add('wrong-flash');
+    S.selectedRight.el.classList.add('wrong-flash');
+    S.mtWrong++;
+    S.streak=0; updateHdr();
+    setTimeout(()=>{
+      if(S.selectedLeft) S.selectedLeft.el.classList.remove('wrong-flash','selected');
+      if(S.selectedRight) S.selectedRight.el.classList.remove('wrong-flash','selected');
+    },400);
+  }
+  S.selectedLeft=null; S.selectedRight=null;
+}
+
+function nextMatch(){
+  S.mtSet++;
+  if(S.mtSet>=MATCH_SETS.length){
+    // show results
+    S.correct=S.mtCorrect; S.wrong=S.mtWrong;
+    const total=S.mtCorrect+S.mtWrong;
+    const pct=total>0?Math.round(S.mtCorrect/total*100):0;
+    showResultsScreen(pct);
+  } else {
+    renderMatch();
+  }
+}
+
+// ═══════════════════════════════════════════
+//  STUDY NOTES
+// ═══════════════════════════════════════════
+let studyTopicFilter='all', studySearchTerm='';
+
+function buildStudyNotes(){
+  filterStudy();
+}
+
+function filterStudy(){
+  studySearchTerm=document.getElementById('study-search').value.toLowerCase();
+  const list=document.getElementById('study-list');
+  list.innerHTML='';
+  const filtered=QUESTIONS.filter(q=>{
+    const topicOk=studyTopicFilter==='all'||q.topic===studyTopicFilter;
+    if(!topicOk) return false;
+    if(!studySearchTerm) return true;
+    return (q.q+q.a+q.topic+q.fact).toLowerCase().includes(studySearchTerm);
+  });
+  if(!filtered.length){
+    list.innerHTML='<div style="color:var(--ink3);font-size:0.85rem;padding:1rem 0">No results found.</div>';
+    return;
+  }
+  filtered.forEach(q=>{
+    const d=document.createElement('div');
+    d.className='study-note';
+    const subjColor=q.subj==='anatomy'?'var(--blue)':'var(--green)';
+    d.innerHTML=`<div class="sn-topic" style="color:${subjColor}">${q.topic} · ${q.type}</div><div class="sn-q">${q.q.replace(/<[^>]+>/g,'')}</div><div class="sn-a">${q.a}</div><div class="sn-fact">${q.fact}</div>`;
+    list.appendChild(d);
+  });
+}
+
+function stFilterTopic(t,chip){
+  studyTopicFilter=t;
+  document.querySelectorAll('[data-stopic]').forEach(c=>c.classList.remove('on'));
+  chip.classList.add('on');
+  filterStudy();
+}
+
+// ═══════════════════════════════════════════
+//  RESULTS
+// ═══════════════════════════════════════════
+function endGame(){
+  clearInterval(S.timer);
+  const total=S.correct+S.wrong;
+  const pct=total>0?Math.round(S.correct/total*100):0;
+  showResultsScreen(pct);
+}
+
+function showResultsScreen(pct){
+  document.getElementById('res-pct').textContent=pct+'%';
+  const col=pct>=80?'var(--green)':pct>=60?'var(--amber)':'var(--red)';
+  document.getElementById('res-pct').style.color=col;
+  let lbl='Keep at it — you\'ve got this! 📚';
+  if(pct===100) lbl='🏆 Perfect score! Absolute legend.';
+  else if(pct>=90) lbl='🌟 Outstanding — nearly flawless!';
+  else if(pct>=80) lbl='🔥 Excellent work!';
+  else if(pct>=60) lbl='👍 Solid effort — more revision needed.';
+  document.getElementById('res-label').textContent=lbl;
+  document.getElementById('rs-correct').textContent=S.correct;
+  document.getElementById('rs-wrong').textContent=S.wrong;
+  document.getElementById('rs-streak').textContent=S.bestStreak;
+  document.getElementById('rs-pts').textContent=S.pts;
+  const total=S.correct+S.wrong;
+  document.getElementById('rs-time').textContent=total>0?(S.totalTime/total).toFixed(1)+'s':'—';
+  document.getElementById('rs-acc').textContent=pct+'%';
+
+  const rev=document.getElementById('rs-review-wrap');
+  if(S.wrongLog.length>0){
+    rev.style.display='block';
+    const list=document.getElementById('rs-review');
+    list.innerHTML='';
+    S.wrongLog.forEach(w=>{
+      const d=document.createElement('div');
+      d.className='review-item';
+      d.innerHTML='<div class="ri-q">'+w.q.replace(/<[^>]+>/g,'')+'</div><div class="ri-yours">Your answer: '+w.yours+'</div><div class="ri-correct">Correct: '+w.correct+'</div>';
+      list.appendChild(d);
+    });
+  } else {
+    rev.style.display='none';
+  }
+  showScreen('results');
+}
+
+// ═══════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════
+function shuffle(a){
+  const r=[...a];
+  for(let i=r.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [r[i],r[j]]=[r[j],r[i]];
+  }
+  return r;
+}
+function flashStreak(txt){
+  const el=document.getElementById('streak-pop');
+  el.textContent=txt;
+  el.classList.remove('go');
+  void el.offsetWidth;
+  el.classList.add('go');
+}
+
+init();
+</script>
+</body>
+</html>
